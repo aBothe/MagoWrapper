@@ -17,4 +17,4 @@ Legal stuff
 ----------------
 
 The wrapper library ('MagoWrapper') is written by Alexander Bothe and is released under the GNU Public License v2.
-The base projects
+The Mago Debugger base project was developed by Aldo J. Nunez. Further legal info can be found in NOTICE.mago.txt

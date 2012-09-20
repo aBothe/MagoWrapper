@@ -1,0 +1,44 @@
+
+Just a rough MagoWrapper class design and some thoughts about how everything should work:
+
+- NativeDebugger
+	- LaunchExecutable : Debuggee
+	- AttachToProcess : Debuggee
+
+- Debugee
+	- Breakpoints
+		- Enum : Breakpoint[]
+		- Add
+		- Remove
+	- DebugThreads
+		- Enum
+		- Current
+	- PauseExecution
+	- ResumtExecution
+	- Debug Events + handling, call backs, overloadable events for custom output
+
+- Breakpoint
+	- Offset
+	- HitCount
+	- Enabled (get/set)
+
+- DebugThread
+	- StackFrames : StackFrame[] // == Call stack
+
+- StackFrame
+	- CurrentInstruction (get/set)
+	- Registers : Register[] 		// probably a long[string] dictionary for value[register name]?
+
+- Register
+	- Name
+	- Value (get/set)
+
+
+- DDebugger : NativeDebugger
+	- getCodeLocationFromAddress(out string file, out CodeLocation location, ulong/uint address)
+	- getAddressFromCodeLocation(string file, CodeLocation location) : ulong/uint
+	- getFunctionLocals
+	- getGlobals (?)
+	- getTypes (?) -- enum types/static types ->> ability to display static items == Win!
+	- toString()-CodeInjection after launch and while acquiring symbol values == Win!
+	- enum type/object getters ->> Execute them to display getter values == Win!
