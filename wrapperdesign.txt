@@ -16,6 +16,7 @@ Just a rough MagoWrapper class design and some thoughts about how everything sho
 	- PauseExecution
 	- ResumtExecution
 	- Debug Events + handling, call backs, overloadable events for custom output
+	- Disassembler support -> Just read from virtual memory, make text out of the commands, and display the instructions in a view
 
 - Breakpoint
 	- Offset
