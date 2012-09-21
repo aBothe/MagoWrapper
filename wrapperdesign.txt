@@ -5,7 +5,7 @@ Just a rough MagoWrapper class design and some thoughts about how everything sho
 	- LaunchExecutable : Debuggee
 	- AttachToProcess : Debuggee
 
-- Debugee
+- Debugee : System.Diagnostics.Process // might by a Process^ mProc; member only
 	- Breakpoints
 		- Enum : Breakpoint[]
 		- Add
@@ -13,8 +13,9 @@ Just a rough MagoWrapper class design and some thoughts about how everything sho
 	- DebugThreads
 		- Enum
 		- Current
-	- PauseExecution
-	- ResumtExecution
+	- Modules : Module[]
+	- PauseExecution // DebugBreakpoint(hProcess)
+	- ResumeExecution
 	- Debug Events + handling, call backs, overloadable events for custom output
 	- Disassembler support -> Just read from virtual memory, make text out of the commands, and display the instructions in a view
 
@@ -22,6 +23,10 @@ Just a rough MagoWrapper class design and some thoughts about how everything sho
 	- Offset
 	- HitCount
 	- Enabled (get/set)
+
+- Module
+	- FileName
+	--> Can be done via .net Process class
 
 - DebugThread
 	- StackFrames : StackFrame[] // == Call stack
@@ -43,3 +48,4 @@ Just a rough MagoWrapper class design and some thoughts about how everything sho
 	- getTypes (?) -- enum types/static types ->> ability to display static items == Win!
 	- toString()-CodeInjection after launch and while acquiring symbol values == Win!
 	- enum type/object getters ->> Execute them to display getter values == Win!
+	- Expression evaluation -> Done with the D parser's evaluation engine.
