@@ -58,10 +58,12 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>Use</PrecompiledHeader>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies />
+      <AdditionalDependencies>EED.lib;Exec.lib;dbgmetric.lib;ad2de.lib;CVSTI.lib;CVSym.lib;MagoNatEE.lib;dbghelp.lib;Real.lib;gdtoa.lib;udis86.lib;MagoNatDE.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(OutDir)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -72,7 +74,8 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies />
+      <AdditionalDependencies>EED.lib;Exec.lib;dbgmetric.lib;ad2de.lib;CVSTI.lib;CVSym.lib;MagoNatEE.lib;dbghelp.lib;Real.lib;gdtoa.lib;udis86.lib;MagoNatDE.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(OutDir)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -81,22 +84,38 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\UnitTests\utestExec\EventCallbackBase.h" />
+    <ClInclude Include="..\UnitTests\utestExec\Utility.h" />
     <ClInclude Include="DDebugger.h" />
-    <ClInclude Include="Debugee.h" />
+    <ClInclude Include="Debuggee.h" />
     <ClInclude Include=".\NativeDebugger.h" />
-    <ClInclude Include="MagoWrapper.h" />
+    <ClInclude Include="DebugSymbols.h" />
+    <ClInclude Include="DebuggerCallback.h" />
+    <ClInclude Include="ExceptionRecord.h" />
+    <ClInclude Include="IManagedIEventCallback.h" />
+    <ClInclude Include="ModuleWrapper.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="CallStackFrame.h" />
     <ClInclude Include="Stdafx.h" />
+    <ClInclude Include="DebuggeeThread.h" />
+    <ClInclude Include="SymbolResolver.h" />
+    <ClInclude Include="Types.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\UnitTests\utestExec\EventCallbackBase.cpp" />
+    <ClCompile Include="..\UnitTests\utestExec\Utility.cpp" />
     <ClCompile Include="AssemblyInfo.cpp" />
     <ClCompile Include=".\NativeDebugger.cpp" />
     <ClCompile Include="DDebugger.cpp" />
-    <ClCompile Include="MagoWrapper.cpp" />
+    <ClCompile Include="Debuggee.cpp" />
+    <ClCompile Include="DebuggeeThread.cpp" />
+    <ClCompile Include="DebuggerCallback.cpp" />
+    <ClCompile Include="ModuleWrapper.cpp" />
     <ClCompile Include="Stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="SymbolResolver.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />

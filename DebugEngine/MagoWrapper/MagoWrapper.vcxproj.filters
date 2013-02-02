@@ -1,54 +1,102 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Quelldateien">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
-    <Filter Include="Headerdateien">
+    <Filter Include="Headers">
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
-    <Filter Include="Ressourcendateien">
+    <Filter Include="Sources">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Resources">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="MagoWrapper.h">
-      <Filter>Headerdateien</Filter>
-    </ClInclude>
     <ClInclude Include="Stdafx.h">
-      <Filter>Headerdateien</Filter>
+      <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
-      <Filter>Headerdateien</Filter>
-    </ClInclude>
-    <ClInclude Include="Debugee.h">
-      <Filter>Headerdateien</Filter>
+      <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include=".\NativeDebugger.h">
-      <Filter>Headerdateien</Filter>
+      <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="DDebugger.h">
-      <Filter>Headerdateien</Filter>
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\UnitTests\utestExec\Utility.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\UnitTests\utestExec\EventCallbackBase.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="IManagedIEventCallback.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="ExceptionRecord.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="CallStackFrame.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="DebugSymbols.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="DebuggerCallback.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="ModuleWrapper.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Debuggee.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="SymbolResolver.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Types.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="DebuggeeThread.h">
+      <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="MagoWrapper.cpp">
-      <Filter>Quelldateien</Filter>
-    </ClCompile>
     <ClCompile Include="AssemblyInfo.cpp">
-      <Filter>Quelldateien</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="Stdafx.cpp">
-      <Filter>Quelldateien</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include=".\NativeDebugger.cpp">
-      <Filter>Quelldateien</Filter>
+      <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="DDebugger.cpp">
-      <Filter>Quelldateien</Filter>
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\UnitTests\utestExec\Utility.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\UnitTests\utestExec\EventCallbackBase.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="DebuggerCallback.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="ModuleWrapper.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Debuggee.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="SymbolResolver.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="DebuggeeThread.cpp">
+      <Filter>Sources</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -56,12 +104,12 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="app.rc">
-      <Filter>Ressourcendateien</Filter>
+      <Filter>Resources</Filter>
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="app.ico">
-      <Filter>Ressourcendateien</Filter>
+      <Filter>Resources</Filter>
     </Image>
   </ItemGroup>
 </Project>

@@ -236,7 +236,7 @@ namespace Mago
                 if ( FAILED( hr ) )
                     return hr;
 
-                hr = exprContext->Init( mModule, mThread, mFuncSH, mBlockSH, mPC, mRegSet );
+				hr = exprContext->Init( mThread->GetDebuggerProxy(), mThread->GetCoreProcess(), mModule, mThread->GetCoreThread(), mFuncSH, mBlockSH, mPC, mRegSet );
                 if ( FAILED( hr ) )
                     return hr;
 

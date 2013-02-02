@@ -9,3 +9,4 @@
 
 
 HRESULT MakeMachineX86( IMachine*& machine );
+HRESULT MakeMachineX86( IMachine** machine );

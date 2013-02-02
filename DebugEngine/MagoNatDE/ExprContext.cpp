@@ -304,21 +304,22 @@ namespace Mago
                 DWORD           tlsArrayPtrAddr = 0;
                 DWORD           tlsArrayAddr = 0;
                 DWORD           tlsBufAddr = 0;
-                DebuggerProxy*  debuggerProxy = mThread->GetDebuggerProxy();
+                //DebuggerProxy*  debuggerProxy = mThread->GetDebuggerProxy();
 
                 if ( !sym->GetAddressOffset( offset ) )
                     return E_FAIL;
 
                 // TODO: rename to GetTebBase
-                tebAddr = mThread->GetCoreThread()->GetTlsBase();
+                //tebAddr = mThread->GetCoreThread()->GetTlsBase();
+				tebAddr = mThread->GetTlsBase();
 
                 tlsArrayPtrAddr = tebAddr + offsetof( TEB32, ThreadLocalStoragePointer );
 
                 SIZE_T  lenRead = 0;
                 SIZE_T  lenUnreadable = 0;
 
-                hr = debuggerProxy->ReadMemory( 
-                    mThread->GetCoreProcess(), 
+				hr = mDebuggerProxy->ReadMemory( 
+                    mProcess, 
                     tlsArrayPtrAddr, 
                     4, 
                     lenRead, 
@@ -336,8 +337,8 @@ namespace Mago
                 }
 
                 // assuming TLS slot 0
-                hr = debuggerProxy->ReadMemory( 
-                    mThread->GetCoreProcess(), 
+                hr = mDebuggerProxy->ReadMemory( 
+                    mProcess, 
                     tlsArrayAddr, 
                     4, 
                     lenRead, 
@@ -435,7 +436,7 @@ namespace Mago
         size_t          targetSize = type->GetSize();
         SIZE_T          lenRead = 0;
         SIZE_T          lenUnreadable = 0;
-        DebuggerProxy*  debuggerProxy = mThread->GetDebuggerProxy();
+        //DebuggerProxy*  debuggerProxy = mThread->GetDebuggerProxy();
 
         // no value to get for complex/aggregate types
         if ( !type->IsScalar() 
@@ -448,8 +449,8 @@ namespace Mago
         if ( targetSize > sizeof targetBuf )
             return E_UNEXPECTED;
 
-        hr = debuggerProxy->ReadMemory( 
-            mThread->GetCoreProcess(), 
+		hr = mDebuggerProxy->ReadMemory( 
+            mProcess, 
             (Address) addr, 
             targetSize, 
             lenRead, 
@@ -1029,7 +1030,7 @@ namespace Mago
         uint8_t         sourceBuf[ sizeof( MagoEE::DataValue ) ] = { 0 };
         size_t          sourceSize = type->GetSize();
         SIZE_T          lenWritten = 0;
-        DebuggerProxy*  debuggerProxy = mThread->GetDebuggerProxy();
+        //DebuggerProxy*  debuggerProxy = mThread->GetDebuggerProxy();
 
         // no value to set for complex/aggregate types
         if ( !type->IsScalar() 
@@ -1108,8 +1109,8 @@ namespace Mago
         if ( FAILED( hr ) )
             return hr;
 
-        hr = debuggerProxy->WriteMemory( 
-            mThread->GetCoreProcess(), 
+		hr = mDebuggerProxy->WriteMemory( 
+            mProcess, 
             (Address) addr, 
             sourceSize, 
             lenWritten, 
@@ -1132,10 +1133,10 @@ namespace Mago
         SIZE_T          len = sizeToRead;
         SIZE_T          lenRead = 0;
         SIZE_T          lenUnreadable = 0;
-        DebuggerProxy*  debuggerProxy = mThread->GetDebuggerProxy();
+        //DebuggerProxy*  debuggerProxy = mThread->GetDebuggerProxy();
 
-        hr = debuggerProxy->ReadMemory(
-            mThread->GetCoreProcess(),
+        hr = mDebuggerProxy->ReadMemory(
+			mProcess,
             (Address) addr,
             len,
             lenRead,
@@ -1167,8 +1168,10 @@ namespace Mago
     ////////////////////////////////////////////////////////////////////////////// 
 
     HRESULT ExprContext::Init( 
+		DebuggerProxy* debuggerProxy,
+		IProcess* process,
         Module* module, 
-        Thread* thread,
+        ::Thread* thread,
         MagoST::SymHandle funcSH, 
         MagoST::SymHandle blockSH,
         Address pc,
@@ -1178,6 +1181,8 @@ namespace Mago
         _ASSERT( module != NULL );
         _ASSERT( thread != NULL );
 
+		mDebuggerProxy = debuggerProxy;
+		mProcess = process;
         mModule = module;
         mThread = thread;
         mFuncSH = funcSH;

@@ -26,6 +26,23 @@ HRESULT MakeMachineX86( IMachine*& machine )
     return S_OK;
 }
 
+
+HRESULT MakeMachineX86( IMachine** machine )
+{
+    HRESULT hr = S_OK;
+    RefPtr<MachineX86>          machX86( new MachineX86() );
+
+    if ( machX86.Get() == NULL )
+        return E_OUTOFMEMORY;
+
+    hr = machX86->Init();
+    if ( FAILED( hr ) )
+        return hr;
+
+    *machine = machX86.Detach();
+    return S_OK;
+}
+
 HRESULT MachineX86::ChangeCurrentPC( uint32_t threadId, int32_t byteOffset )
 {
     HRESULT hr = S_OK;

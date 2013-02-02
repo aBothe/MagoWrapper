@@ -3,11 +3,11 @@
 /* this ALWAYS GENERATED file contains the definitions for the interfaces */
 
 
- /* File created by MIDL compiler version 8.00.0594 */
-/* at Wed Sep 19 15:32:59 2012
+ /* File created by MIDL compiler version 8.00.0595 */
+/* at Sat Feb 02 14:24:55 2013
  */
 /* Compiler settings for .\MagoNatDE.idl:
-    Oicf, W1, Zp8, env=Win32 (32b run), target_arch=X86 8.00.0594 
+    Oicf, W1, Zp8, env=Win32 (32b run), target_arch=X86 8.00.0595 
     protocol : dce , ms_ext, c_ext, robust
     error checks: allocation ref bounds_check enum stub_data 
     VC __declspec() decoration level: 
