@@ -600,7 +600,7 @@ struct TypeInfo_Class
     const DynamicArray<MemberInfo> (*xgetMembers)(DynamicArray<char*>);
 };
 
-HRESULT GetClassName( IProcess* process, MachineAddress addr, BSTR* pbstrClassName )
+HRESULT GetExceptionClassName( IProcess* process, MachineAddress addr, BSTR* pbstrClassName )
 {
     _ASSERT( process != NULL );
     _ASSERT( pbstrClassName != NULL );

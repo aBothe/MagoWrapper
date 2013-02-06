@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "DebuggerCallback.h"
 
-//using namespace Mago;
 using namespace boost;
 
 namespace MagoWrapper
@@ -9,7 +8,6 @@ namespace MagoWrapper
 	DebuggerCallback::DebuggerCallback(IManagedIEventCallback^ managedCallback) : EventCallbackBase()
 	{
 		mManagedCallback = managedCallback;
-		//EventCallbackBase::SetVerbose(false);
 		SetCanStepInFunctionReturnValue(true);
 	}
 

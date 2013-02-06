@@ -111,6 +111,7 @@
     <ClCompile Include="Debuggee.cpp" />
     <ClCompile Include="DebuggeeThread.cpp" />
     <ClCompile Include="DebuggerCallback.cpp" />
+    <ClCompile Include="ExceptionRecord.cpp" />
     <ClCompile Include="ModuleWrapper.cpp" />
     <ClCompile Include="Stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

@@ -187,8 +187,8 @@ namespace MagoWrapper{
 	{
 		SetStoppedThreadId(threadId);
 
-		ExceptionRecord^ rec = gcnew ExceptionRecord(exceptRec->ExceptionCode, exceptRec->ExceptionFlags, exceptRec->ExceptionAddress);
-		
+		ExceptionRecord^ rec = gcnew ExceptionRecord(process, exceptRec);
+
 		return OnException(threadId, firstChance, rec);
 	}
 

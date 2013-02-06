@@ -160,7 +160,7 @@ EqualsFunc GetFloatingEqualsFunc( MagoEE::Type* type );
 bool EqualFloat( size_t typeSize, const Real10& left, const Real10& right );
 bool EqualValue( MagoEE::Type* type, const MagoEE::DataValue& left, const MagoEE::DataValue& right );
 
-HRESULT GetClassName( IProcess* process, MachineAddress addr, BSTR* pbstrClassName );
+HRESULT GetExceptionClassName( IProcess* process, MachineAddress addr, BSTR* pbstrClassName );
 HRESULT GetExceptionInfo( IProcess* process, MachineAddress addr, BSTR* pbstrInfo );
 
 uint32_t HashOf( const void* buffer, uint32_t length );

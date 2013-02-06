@@ -1,45 +1,44 @@
 #pragma once
 
+using namespace System;
+
 namespace MagoWrapper{
 
 	public ref class ExceptionRecord
 	{
 	public:
-		ExceptionRecord(DWORD exceptionCode, DWORD exceptionFlags, PVOID exceptionAddress)
+		property String^ ExceptionName
 		{
-			this->exceptionCode = exceptionCode;
-			this->exceptionFlags = exceptionFlags;
-			this->exceptionAddress = exceptionAddress;
+			String^ get();
+		}
+
+		property String^ ExceptionInfo
+		{
+			String^ get();
 		}
 
 		property DWORD ExceptionCode { 
-		   public: DWORD get() { return exceptionCode; }
-		   //private: void set(DWORD value) { exceptionCode = value; }
+		   DWORD get();
 		}
 
 		property DWORD ExceptionFlags { 
-		   public: DWORD get() { return exceptionFlags; }
-		   //private: void set(DWORD value) { exceptionCode = value; }
+		   DWORD get();
 		}
 
 		property PVOID ExceptionAddress { 
-		   public: PVOID get() { return exceptionAddress; }
-		   //private: void set(DWORD value) { exceptionCode = value; }
+		   PVOID get();
 		}
 
+		property ExceptionRecord^ InnerExceptionRecord {
+			ExceptionRecord^ get();
+		}
+	internal:
+		ExceptionRecord(IProcess* process, const EXCEPTION_RECORD* exceptionRec);
+
 	private:
-		DWORD exceptionCode;
-		DWORD exceptionFlags;
-		PVOID exceptionAddress;
+		IProcess* mProcess;
+		const EXCEPTION_RECORD* mExceptionRecord;
+		ExceptionRecord^ mInnerExceptionRecord;
 	};
 	
-	//typedef struct _EXCEPTION_RECORD {
-	//	DWORD    ExceptionCode;
-	//	DWORD ExceptionFlags;
-	//	struct _EXCEPTION_RECORD *ExceptionRecord;
-	//	PVOID ExceptionAddress;
-	//	DWORD NumberParameters;
-	//	ULONG_PTR ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
-	//	} E
-
 }

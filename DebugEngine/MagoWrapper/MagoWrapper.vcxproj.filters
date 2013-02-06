@@ -98,6 +98,9 @@
     <ClCompile Include="DebuggeeThread.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
+    <ClCompile Include="ExceptionRecord.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
