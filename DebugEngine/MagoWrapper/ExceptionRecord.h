@@ -1,33 +1,46 @@
 #pragma once
 
+using namespace System;
+
 namespace MagoWrapper{
 
 	public ref class ExceptionRecord
 	{
 	public:
-		ExceptionRecord(DWORD exceptionCode, DWORD exceptionFlags, PVOID exceptionAddress)
+		ExceptionRecord(String^ exceptionName, String^ exceptionInfo, DWORD exceptionCode, DWORD exceptionFlags, PVOID exceptionAddress)
 		{
+			this->exceptionName = gcnew String(exceptionName);
+			this->exceptionInfo = gcnew String(exceptionInfo);
 			this->exceptionCode = exceptionCode;
 			this->exceptionFlags = exceptionFlags;
 			this->exceptionAddress = exceptionAddress;
 		}
 
+		property String^ ExceptionName
+		{
+			String^ get() { return exceptionName; }
+		}
+
+		property String^ ExceptionInfo
+		{
+			String^ get() { return exceptionInfo; }
+		}
+
 		property DWORD ExceptionCode { 
-		   public: DWORD get() { return exceptionCode; }
-		   //private: void set(DWORD value) { exceptionCode = value; }
+		   DWORD get() { return exceptionCode; }
 		}
 
 		property DWORD ExceptionFlags { 
-		   public: DWORD get() { return exceptionFlags; }
-		   //private: void set(DWORD value) { exceptionCode = value; }
+		   DWORD get() { return exceptionFlags; }
 		}
 
 		property PVOID ExceptionAddress { 
-		   public: PVOID get() { return exceptionAddress; }
-		   //private: void set(DWORD value) { exceptionCode = value; }
+		   PVOID get() { return exceptionAddress; }
 		}
 
 	private:
+		String^ exceptionName;
+		String^ exceptionInfo;
 		DWORD exceptionCode;
 		DWORD exceptionFlags;
 		PVOID exceptionAddress;

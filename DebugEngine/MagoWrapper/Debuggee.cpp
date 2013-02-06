@@ -187,8 +187,27 @@ namespace MagoWrapper{
 	{
 		SetStoppedThreadId(threadId);
 
-		ExceptionRecord^ rec = gcnew ExceptionRecord(exceptRec->ExceptionCode, exceptRec->ExceptionFlags, exceptRec->ExceptionAddress);
-		
+		CComBSTR exceptionName = NULL;
+		CComBSTR exceptionInfo = NULL;
+
+		HRESULT hr;
+		hr = GetExceptionClassName( process, exceptRec->ExceptionInformation[0], &exceptionName );
+		if ( FAILED(hr) )
+			exceptionName = "";
+
+		hr = GetExceptionInfo( process, exceptRec->ExceptionInformation[0], &exceptionInfo );
+		if ( FAILED(hr) )
+			exceptionInfo = "";
+
+		if (exceptionName == NULL)
+			exceptionName = L"D Exception";
+
+		ExceptionRecord^ rec = gcnew ExceptionRecord(
+			gcnew String(exceptionName.m_str), 
+			gcnew String(exceptionInfo.m_str),
+			exceptRec->ExceptionCode, 
+			exceptRec->ExceptionFlags, exceptRec->ExceptionAddress);
+
 		return OnException(threadId, firstChance, rec);
 	}
 
