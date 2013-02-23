@@ -61,7 +61,7 @@ namespace MagoWrapper
 
 		List<DebugScopedSymbol^>^ GetLocalSymbols(DWORD threadId);
 		List<DebugScopedSymbol^>^ GetLocalSymbols(DWORD threadId, Address frameAddress);
-		List<DebugScopedSymbol^>^ GetChildSymbols(String^ expression, DWORD threadId);
+		List<DebugScopedSymbol^>^ GetChildSymbols(String^ expression);
 		DebugScopedSymbol^ Evaluate(String^ expression, DWORD threadId);
 
 	internal:

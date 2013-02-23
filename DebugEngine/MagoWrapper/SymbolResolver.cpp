@@ -175,7 +175,7 @@ namespace MagoWrapper
 	}
 
 
-	List<DebugScopedSymbol^>^ SymbolResolver::GetChildSymbols(String^ expression, DWORD threadId)
+	List<DebugScopedSymbol^>^ SymbolResolver::GetChildSymbols(String^ expression)
 	{
 		List<DebugScopedSymbol^>^ list = gcnew List<DebugScopedSymbol^>();
 
@@ -196,7 +196,7 @@ namespace MagoWrapper
 		CONTEXT						context = { 0 };
 		RefPtr<Mago::IRegisterSet>	regSet;
 
-		if (! mDebuggee->GetCoreProcess()->FindThread(threadId, thread.Ref()) )
+		if (! mDebuggee->GetCoreProcess()->FindThread(mDebuggee->StoppedThreadId, thread.Ref()) )
 			return list;
 
 		// TODO: we should get this another way
@@ -223,7 +223,7 @@ namespace MagoWrapper
 		if ( FAILED( hr ) )
 			return list;
 
-		hr = MakeExprContext(address, threadId, module, regSet, funcSH, blockSH, exprContext.Ref());
+		hr = MakeExprContext(address, mDebuggee->StoppedThreadId, module, regSet, funcSH, blockSH, exprContext.Ref());
 		if ( FAILED(hr) )
 			return list;
 
@@ -249,7 +249,6 @@ namespace MagoWrapper
 		hr = parsedExpr->Evaluate( options, exprContext, evalResult );
 		if ( FAILED( hr ) )
 			return list;
-
 
         hr = MagoEE::EED::EnumValueChildren( 
             exprContext, 
