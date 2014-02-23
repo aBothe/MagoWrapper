@@ -15,119 +15,119 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include=".\Common.cpp">
+    <ClCompile Include="Common.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\DecodeX86.cpp">
+    <ClCompile Include="DecodeX86.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\Exec.cpp">
+    <ClCompile Include="Exec.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\Log.cpp">
+    <ClCompile Include="Log.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\MachineX86.cpp">
+    <ClCompile Include="MachineX86.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\MachineX86Base.cpp">
+    <ClCompile Include="MachineX86Base.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\Module.cpp">
+    <ClCompile Include="Module.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\PathResolver.cpp">
+    <ClCompile Include="PathResolver.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\Process.cpp">
+    <ClCompile Include="Process.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\Steppers.cpp">
+    <ClCompile Include="Steppers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\Thread.cpp">
+    <ClCompile Include="Thread.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\ThreadX86.cpp">
+    <ClCompile Include="ThreadX86.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\Utility.cpp">
+    <ClCompile Include="Utility.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include=".\Common.h">
+    <ClInclude Include="Common.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\DecodeX86.h">
+    <ClInclude Include="DecodeX86.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\Enumerator.h">
+    <ClInclude Include="Enumerator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\Error.h">
+    <ClInclude Include="Error.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\EventCallback.h">
+    <ClInclude Include="EventCallback.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\Exec.h">
+    <ClInclude Include="Exec.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\IModule.h">
+    <ClInclude Include="IModule.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\IProcess.h">
+    <ClInclude Include="IProcess.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\Iter.h">
+    <ClInclude Include="Iter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\Log.h">
+    <ClInclude Include="Log.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\Machine.h">
+    <ClInclude Include="Machine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\MachineX86.h">
+    <ClInclude Include="MachineX86.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\MachineX86Base.h">
+    <ClInclude Include="MachineX86Base.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\MakeMachineX86.h">
+    <ClInclude Include="MakeMachineX86.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\Module.h">
+    <ClInclude Include="Module.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\PathResolver.h">
+    <ClInclude Include="PathResolver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\Process.h">
+    <ClInclude Include="Process.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\Stepper.h">
+    <ClInclude Include="Stepper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\targetver.h">
+    <ClInclude Include="targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\Thread.h">
+    <ClInclude Include="Thread.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\ThreadX86.h">
+    <ClInclude Include="ThreadX86.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\Types.h">
+    <ClInclude Include="Types.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\Utility.h">
+    <ClInclude Include="Utility.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Text Include=".\Notes.txt" />
-    <Text Include=".\ReadMe.txt" />
+    <None Include="Notes.txt" />
+    <None Include="ReadMe.txt" />
   </ItemGroup>
 </Project>

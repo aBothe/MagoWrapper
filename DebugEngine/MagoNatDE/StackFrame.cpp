@@ -236,7 +236,7 @@ namespace Mago
                 if ( FAILED( hr ) )
                     return hr;
 
-				hr = exprContext->Init( mThread->GetDebuggerProxy(), mThread->GetCoreProcess(), mModule, mThread->GetCoreThread(), mFuncSH, mBlockSH, mPC, mRegSet );
+                hr = exprContext->Init( mModule, mThread, mFuncSH, mBlockSH, mPC, mRegSet );
                 if ( FAILED( hr ) )
                     return hr;
 
@@ -390,7 +390,7 @@ namespace Mago
         if ( FAILED( hr ) )
             return hr;
 
-        hr = Utf8To16( fileInfo.Name, fileInfo.NameLength, info.Filename.m_str );
+        hr = Utf8To16( fileInfo.Name.ptr, fileInfo.Name.length, info.Filename.m_str );
         if ( FAILED( hr ) )
             return hr;
 
@@ -489,11 +489,11 @@ namespace Mago
         HRESULT hr = S_OK;
         CComBSTR funcNameBstr;
 
-        PasString*  pstrName = NULL;
+        SymString   pstrName;
         if ( !symInfo->GetName( pstrName ) )
             return E_NOT_FOUND;
 
-        hr = Utf8To16( pstrName->GetName(), pstrName->GetLength(), funcNameBstr.m_str );
+        hr = Utf8To16( pstrName.GetName(), pstrName.GetLength(), funcNameBstr.m_str );
         if ( FAILED( hr ) )
             return hr;
 

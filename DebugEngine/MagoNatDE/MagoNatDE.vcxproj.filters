@@ -14,318 +14,316 @@
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
     </Filter>
     <Filter Include="Generated Files">
-      <UniqueIdentifier>{e2ecda97-1b3f-4d51-a044-75103aed1aff}</UniqueIdentifier>
+      <UniqueIdentifier>{3f92c922-8b92-4e70-92f6-ac5e4d4d88bf}</UniqueIdentifier>
       <SourceControlFiles>False</SourceControlFiles>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include=".\BoundBreakpoint.cpp">
+    <ClCompile Include="BoundBreakpoint.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\BPBinderCallback.cpp">
+    <ClCompile Include="BPBinderCallback.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\BPBinders.cpp">
+    <ClCompile Include="BPBinders.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\BPDocumentContext.cpp">
+    <ClCompile Include="BPDocumentContext.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\BreakpointResolution.cpp">
+    <ClCompile Include="BreakpointResolution.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\CodeContext.cpp">
+    <ClCompile Include="CodeContext.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\Common.cpp">
+    <ClCompile Include="Common.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\Config.cpp">
+    <ClCompile Include="Config.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\CVDecls.cpp">
+    <ClCompile Include="CVDecls.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\DebuggerProxy.cpp">
+    <ClCompile Include="DebuggerProxy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\DiaLoadCallback.cpp">
+    <ClCompile Include="DiaLoadCallback.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\DisassemblyStream.cpp">
+    <ClCompile Include="DisassemblyStream.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\dllmain.cpp">
+    <ClCompile Include="dllmain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\DocTracker.cpp">
+    <ClCompile Include="DocumentContext.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\DocumentContext.cpp">
+    <ClCompile Include="Engine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\Engine.cpp">
+    <ClCompile Include="EnumFrameInfo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\EnumFrameInfo.cpp">
+    <ClCompile Include="EnumPropertyInfo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\EnumPropertyInfo.cpp">
+    <ClCompile Include="EnumX86Reg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\EnumX86Reg.cpp">
+    <ClCompile Include="ErrorBreakpoint.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\ErrorBreakpoint.cpp">
+    <ClCompile Include="ErrorBreakpointResolution.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\ErrorBreakpointResolution.cpp">
+    <ClCompile Include="ErrorProperty.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\ErrorProperty.cpp">
+    <ClCompile Include="EventCallback.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\EventCallback.cpp">
+    <ClCompile Include="Events.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\Events.cpp">
+    <ClCompile Include="Expr.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\ExceptionTable.cpp">
+    <ClCompile Include="ExprContext.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\Expr.cpp">
+    <ClCompile Include="FormatNum.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\ExprContext.cpp">
+    <ClCompile Include="FrameProperty.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\FormatNum.cpp">
+    <ClCompile Include="InstCache.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\FrameProperty.cpp">
+    <ClCompile Include="MagoNatDE.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\InstCache.cpp">
+    <ClCompile Include="MemoryBytes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\MagoNatDE.cpp">
+    <ClCompile Include="Module.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\MemoryBytes.cpp">
+    <ClCompile Include="PendingBreakpoint.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\Module.cpp">
+    <ClCompile Include="Program.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\PendingBreakpoint.cpp">
+    <ClCompile Include="ProgramNode.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\Program.cpp">
+    <ClCompile Include="Property.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\ProgramNode.cpp">
+    <ClCompile Include="RegisterSet.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\Property.cpp">
+    <ClCompile Include="RegProperty.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\RegisterSet.cpp">
+    <ClCompile Include="SingleDocumentContext.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\RegProperty.cpp">
+    <ClCompile Include="StackFrame.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\SingleDocumentContext.cpp">
+    <ClCompile Include="Thread.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\StackFrame.cpp">
+    <ClCompile Include="Utility.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\Thread.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include=".\Utility.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include=".\MagoNatDE_i.c">
+    <ClCompile Include="MagoNatDE_i.c">
       <Filter>Generated Files</Filter>
     </ClCompile>
+    <ClCompile Include="DocTracker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ExceptionTable.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include=".\MagoNatDE.def">
+    <None Include="MagoNatDE.def">
       <Filter>Source Files</Filter>
     </None>
-    <None Include=".\Engine.rgs">
+    <None Include="Engine.rgs">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include=".\MagoNatDE.rgs">
+    <None Include="MagoNatDE.rgs">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <Midl Include=".\MagoNatDE.idl">
+    <Midl Include="MagoNatDE.idl">
       <Filter>Source Files</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include=".\BoundBreakpoint.h">
+    <ClInclude Include="BoundBreakpoint.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\BPBinderCallback.h">
+    <ClInclude Include="BPBinderCallback.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\BPBinders.h">
+    <ClInclude Include="BPBinders.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\BPDocumentContext.h">
+    <ClInclude Include="BPDocumentContext.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\BpResolutionLocation.h">
+    <ClInclude Include="BpResolutionLocation.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\BreakpointResolution.h">
+    <ClInclude Include="BreakpointResolution.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\CodeContext.h">
+    <ClInclude Include="CodeContext.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\ComEnumWithCount.h">
+    <ClInclude Include="ComEnumWithCount.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\CommandFunctor.h">
+    <ClInclude Include="CommandFunctor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\Common.h">
+    <ClInclude Include="Common.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\Config.h">
+    <ClInclude Include="Config.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\CVDecls.h">
+    <ClInclude Include="CVDecls.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\dbgmetric_alt.h">
+    <ClInclude Include="dbgmetric_alt.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\DebuggerProxy.h">
+    <ClInclude Include="DebuggerProxy.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\DiaLoadCallback.h">
+    <ClInclude Include="DiaLoadCallback.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\DisassemblyStream.h">
+    <ClInclude Include="DisassemblyStream.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\dllmain.h">
+    <ClInclude Include="dllmain.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\DocTracker.h">
+    <ClInclude Include="DocumentContext.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\DocumentContext.h">
+    <ClInclude Include="Engine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\Engine.h">
+    <ClInclude Include="EnumFrameInfo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\EnumFrameInfo.h">
+    <ClInclude Include="EnumPropertyInfo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\EnumPropertyInfo.h">
+    <ClInclude Include="EnumX86Reg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\EnumX86Reg.h">
+    <ClInclude Include="ErrorBreakpoint.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\ErrorBreakpoint.h">
+    <ClInclude Include="ErrorBreakpointResolution.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\ErrorBreakpointResolution.h">
+    <ClInclude Include="ErrorProperty.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\ErrorProperty.h">
+    <ClInclude Include="EventCallback.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\EventCallback.h">
+    <ClInclude Include="Events.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\Events.h">
+    <ClInclude Include="Expr.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\ExceptionTable.h">
+    <ClInclude Include="ExprContext.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\Expr.h">
+    <ClInclude Include="FormatNum.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\ExprContext.h">
+    <ClInclude Include="FrameProperty.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\FormatNum.h">
+    <ClInclude Include="InstCache.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\FrameProperty.h">
+    <ClInclude Include="MemoryBytes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\InstCache.h">
+    <ClInclude Include="Module.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\MemoryBytes.h">
+    <ClInclude Include="PendingBreakpoint.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\Module.h">
+    <ClInclude Include="Program.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\PendingBreakpoint.h">
+    <ClInclude Include="ProgramNode.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\Program.h">
+    <ClInclude Include="Property.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\ProgramNode.h">
+    <ClInclude Include="RegisterSet.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\Property.h">
+    <ClInclude Include="RegProperty.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\RegisterSet.h">
+    <ClInclude Include="Resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\RegProperty.h">
+    <ClInclude Include="SingleDocumentContext.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\Resource.h">
+    <ClInclude Include="StackFrame.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\SingleDocumentContext.h">
+    <ClInclude Include="targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\StackFrame.h">
+    <ClInclude Include="Thread.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\targetver.h">
+    <ClInclude Include="Utility.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\Thread.h">
+    <ClInclude Include="winternl2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\Utility.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include=".\winternl2.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include=".\MagoNatDE_i.h">
+    <ClInclude Include="MagoNatDE_i.h">
       <Filter>Generated Files</Filter>
     </ClInclude>
+    <ClInclude Include="DocTracker.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ExceptionTable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include=".\MagoNatDE.rc">
+    <ResourceCompile Include="MagoNatDE.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include=".\ReadMe.txt" />
   </ItemGroup>
 </Project>

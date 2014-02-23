@@ -105,6 +105,22 @@ namespace MagoST
         if ( dir == NULL )
             return E_BAD_FORMAT;
 
+        // get maximum module index
+        for ( DWORD i = 0; i < dirHeader->cDir; i++ )
+        {
+            OMFDirEntry*    entry = (OMFDirEntry*) dir;
+            if ( NULL != GetCVPtr<void>( entry->lfo, entry->cb ) ) // skip some bad records produced by optlink
+                if( entry->SubSection == sstModule )
+                    mCompilandCount++;
+
+            dir += dirHeader->cbDirEntry;
+        }
+        mCompilandDetails.reset( new CompilandDetails[ mCompilandCount ] );
+        if ( mCompilandDetails.get() == NULL )
+            return E_OUTOFMEMORY;
+        memset( mCompilandDetails.get(), 0, mCompilandCount * sizeof( CompilandDetails ) );
+
+        dir = dirStart;
         for ( DWORD i = 0; i < dirHeader->cDir; i++ )
         {
             OMFDirEntry*    entry = (OMFDirEntry*) dir;
@@ -142,24 +158,12 @@ namespace MagoST
         switch ( entry->SubSection )
         {
         case sstModule:
-            _ASSERT( mCompilandDetails.get() == NULL );
-            if ( mCompilandDetails.get() == NULL )
-                mCompilandCount++;
-            // else, ignore all the ones after this stage, because they shouldn't be here
             
             MarkLineNumbers( entry );
             break;
 
         case sstAlignSym:
         case sstSrcModule:
-            if ( mCompilandDetails.get() == NULL )
-            {
-                mCompilandDetails.reset( new CompilandDetails[ mCompilandCount ] );
-                if ( mCompilandDetails.get() == NULL )
-                    return E_OUTOFMEMORY;
-                memset( mCompilandDetails.get(), 0, mCompilandCount * sizeof( CompilandDetails ) );
-            }
-
             if ( (entry->iMod == 0) || (entry->iMod > mCompilandCount) )
                 return E_BAD_FORMAT;
 
@@ -444,13 +448,13 @@ namespace MagoST
             heapDir = internalHandle.HeapDir;
         }
 
-        PasString*      pstrName = NULL;
+        SymString       pstrName;
 
         if ( !QuickGetName( sym, pstrName ) )
             return false;
-        if ( nameLen != pstrName->GetLength() )
+        if ( nameLen != pstrName.GetLength() )
             return false;
-        if ( memcmp( nameChars, pstrName->GetName(), nameLen ) != 0 )
+        if ( memcmp( nameChars, pstrName.GetName(), nameLen ) != 0 )
             return false;
 
         newSymbol = sym;
@@ -723,27 +727,27 @@ namespace MagoST
         return GetCVPtr<CodeViewType>( typeBase + offsetTable[index], 4 );
     }
 
-    bool DebugStore::GetTypeFromTypeIndex( WORD typeIndex, TypeHandle& handle )
+    bool DebugStore::GetTypeFromTypeIndex( TypeIndex typeIndex, TypeHandle& handle )
     {
         TypeHandleIn*   internalHandle = (TypeHandleIn*) &handle;
 
-        if ( typeIndex == 0 )
+        if ( typeIndex == 0 || typeIndex > 0xffff)
             return false;
 
         if ( typeIndex < 0x1000 )
         {
-            internalHandle->Index = typeIndex;
+            internalHandle->Index = (WORD) typeIndex;
             internalHandle->Type = NULL;
             internalHandle->Tag = 0;
             return true;
         }
 
-        CodeViewType*   type = GetTypeFromTypeIndex( typeIndex );
+        CodeViewType*   type = GetTypeFromTypeIndex( (WORD) typeIndex );
 
         if ( type == NULL )
             return false;
 
-        internalHandle->Index = typeIndex;
+        internalHandle->Index = (WORD) typeIndex;
         internalHandle->Type = (BYTE*) type;
         internalHandle->Tag = type->Generic.id;
 
@@ -842,7 +846,7 @@ namespace MagoST
         return true;
     }
 
-    bool DebugStore::SetFListContinuationScope( TypeIndex continuationIndex, TypeScopeIn* scopeIn )
+    bool DebugStore::SetFListContinuationScope( WORD continuationIndex, TypeScopeIn* scopeIn )
     {
         CodeViewType*   contList = GetTypeFromTypeIndex( continuationIndex );
 
@@ -951,7 +955,7 @@ namespace MagoST
         while ( internalHandle->Tag == LF_MODIFIER )
         {
             CodeViewType*   type = (CodeViewType*) internalHandle->Type;
-            TypeIndex       newIndex = type->modifier.type;
+            WORD            newIndex = type->modifier.type;
 
             mod |= type->modifier.attr;
 
@@ -1043,7 +1047,7 @@ namespace MagoST
             return E_FAIL;
 
         segDescTable = (OMFSegDesc*) (mod + 1);
-        info.Name = (PasString*) (segDescTable + mod->cSeg);
+        assign( info.Name, (PasString*) (segDescTable + mod->cSeg) );
 
         if ( mCompilandDetails[zIndex].SourceEntry != NULL )
             srcMod = GetCVPtr<OMFSourceModule>( mCompilandDetails[zIndex].SourceEntry->lfo );
@@ -1139,8 +1143,7 @@ namespace MagoST
 
         // the spec says the name length field is 2 bytes long, but in practice I see that it's 1
         info.SegmentCount = file->cSeg;
-        info.NameLength = *(BYTE*) backOfFile;
-        info.Name = (char*) (backOfFile + 1);
+        info.Name.set(*(BYTE*) backOfFile, (char*) (backOfFile + 1), false);
 
         return S_OK;
     }
@@ -1300,46 +1303,37 @@ namespace MagoST
         int         closestDistAbove = INT_MAX;
         int         closestDistBelow = INT_MAX;
 
-        for ( uint16_t zSegIx = 0; zSegIx < file->cSeg; zSegIx++ )
+        for ( uint16_t zSegIx = 0; zSegIx < file->cSeg && closestDistAbove > 0; zSegIx++ )
         {
             OMFSourceLine*  srcLine = (OMFSourceLine*) ((BYTE*) srcMod + srcLinePtrTable[zSegIx]);
 
             DWORD*  offsetTable = (DWORD*) ((BYTE*) srcLine + 4);
             WORD*   numberTable = (WORD*) (offsetTable + srcLine->cLnOff);
 
-            if ( srcLine->cLnOff == 0 )
-                continue;
-
-            if ( (numberTable[0] <= line) && (numberTable[ srcLine->cLnOff - 1 ] >= line) )
+            // line numbers don't have to be ascending 
+            for ( uint16_t zLn = 0; zLn < srcLine->cLnOff; zLn++ )
             {
-                segInfo.SegmentIndex = srcLine->Seg;
-                segInfo.LineCount = srcLine->cLnOff;
-                segInfo.LineNumbers = numberTable;
-                segInfo.Offsets = offsetTable;
-                segInfo.Start = startEndTable[zSegIx].first;
-                segInfo.End = startEndTable[zSegIx].second;
-                FixEndOffset( segInfo.Offsets[segInfo.LineCount - 1], segInfo.End );
-                return true;
-            }
-
-            if ( numberTable[ srcLine->cLnOff - 1 ] < line )
-            {
-                int dist = line - numberTable[ srcLine->cLnOff - 1 ];
-
-                if ( dist < closestDistAbove )
+                if ( numberTable[ zLn ] < line )
                 {
-                    closestDistAbove = dist;
-                    zClosestAboveSegIx = zSegIx;
+                    int dist = line - numberTable[ zLn ];
+
+                    if ( dist < closestDistAbove )
+                    {
+                        closestDistAbove = dist;
+                        zClosestAboveSegIx = zSegIx;
+                        if( dist == 0 )
+                            break;
+                    }
                 }
-            }
-            else
-            {
-                int dist = numberTable[ 0 ] - line;
-
-                if ( dist < closestDistBelow )
+                else if ( numberTable[ zLn ] > line )
                 {
-                    closestDistBelow = dist;
-                    zClosestBelowSegIx = zSegIx;
+                    int dist = numberTable[ zLn ] - line;
+
+                    if ( dist < closestDistBelow )
+                    {
+                        closestDistBelow = dist;
+                        zClosestBelowSegIx = zSegIx;
+                    }
                 }
             }
         }

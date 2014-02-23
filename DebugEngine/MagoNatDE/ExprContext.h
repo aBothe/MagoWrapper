@@ -17,7 +17,6 @@ namespace Mago
 {
     class Thread;
     class IRegisterSet;
-	class DebuggerProxy;
 
 
     class ATL_NO_VTABLE ExprContext : 
@@ -27,10 +26,8 @@ namespace Mago
     {
         Address                         mPC;
         RefPtr<IRegisterSet>            mRegSet;
-		DebuggerProxy*					mDebuggerProxy;
-		RefPtr<::IProcess>				mProcess;
         RefPtr<Module>                  mModule;
-        RefPtr<::Thread>                mThread;
+        RefPtr<Thread>                  mThread;
         MagoST::SymHandle               mFuncSH;
         MagoST::SymHandle               mBlockSH;
         RefPtr<MagoEE::ITypeEnv>        mTypeEnv;
@@ -139,11 +136,9 @@ namespace Mago
             MagoEE::DataObject& resultObj );
 
     public:
-        HRESULT Init(
-			DebuggerProxy* debuggerProxy,
-			IProcess* process,
+        HRESULT Init( 
             Module* module,
-            ::Thread* thread,
+            Thread* thread,
             MagoST::SymHandle funcSH, 
             MagoST::SymHandle blockSH,
             Address pc,

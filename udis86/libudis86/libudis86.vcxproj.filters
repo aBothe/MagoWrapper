@@ -15,49 +15,49 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include=".\decode.c">
+    <ClCompile Include="decode.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\input.c">
+    <ClCompile Include="input.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\itab.c">
+    <ClCompile Include="itab.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\syn-att.c">
+    <ClCompile Include="syn-att.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\syn-intel.c">
+    <ClCompile Include="syn-intel.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\syn.c">
+    <ClCompile Include="syn.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\udis86.c">
+    <ClCompile Include="udis86.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include=".\decode.h">
+    <ClInclude Include="decode.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\extern.h">
+    <ClInclude Include="extern.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\input.h">
+    <ClInclude Include="input.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\itab.h">
+    <ClInclude Include="itab.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\syn.h">
+    <ClInclude Include="syn.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\types.h">
+    <ClInclude Include="types.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Text Include=".\ReadMe.txt" />
+    <None Include="ReadMe.txt" />
   </ItemGroup>
 </Project>

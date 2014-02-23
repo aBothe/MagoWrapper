@@ -11,9 +11,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <VCTargetsPath Condition="'$(VCTargetsPath11)' != '' and '$(VSVersion)' == '' and '$(VisualStudioVersion)' == ''">$(VCTargetsPath11)</VCTargetsPath>
-  </PropertyGroup>
-  <PropertyGroup Label="Globals">
     <ProjectGuid>{18E6FA8B-62C6-42D7-964B-4C34C797075B}</ProjectGuid>
     <RootNamespace>CVSTI</RootNamespace>
     <Keyword>Win32Proj</Keyword>
@@ -21,13 +18,11 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <PlatformToolset>v110</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <PlatformToolset>v110</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
@@ -35,22 +30,19 @@
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\PropSheets\MagoDbg_3rdParty_Release.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\PropSheets\MagoDbg_3rdParty_Debug.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <_ProjectFileVersion>11.0.50522.1</_ProjectFileVersion>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
-    <IntDir>$(Configuration)\</IntDir>
-    <IncludePath>$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSDK_IncludePath);A:\Projects\tutorial.lib\Boost;$(IncludePath)</IncludePath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
-    <IntDir>$(Configuration)\</IntDir>
+    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(Configuration)\</IntDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(Configuration)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -65,12 +57,12 @@
       <WarningLevel>Level4</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
-    <ResourceCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ResourceCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -86,47 +78,47 @@
       <WarningLevel>Level4</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
-    <ResourceCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ResourceCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include=".\Common.cpp">
+    <ClCompile Include="Common.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include=".\CVSTIPublic.cpp" />
-    <ClCompile Include=".\DataSource.cpp" />
-    <ClCompile Include=".\dllmain.cpp" />
-    <ClCompile Include=".\ImageAddrMap.cpp" />
-    <ClCompile Include=".\ImageDebugContainer.cpp" />
-    <ClCompile Include=".\Session.cpp" />
+    <ClCompile Include="CVSTIPublic.cpp" />
+    <ClCompile Include="DataSource.cpp" />
+    <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="ImageAddrMap.cpp" />
+    <ClCompile Include="ImageDebugContainer.cpp" />
+    <ClCompile Include="Session.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include=".\Common.h" />
-    <ClInclude Include=".\CVSTI.h" />
-    <ClInclude Include=".\CVSTIPublic.h" />
-    <ClInclude Include=".\DataSource.h" />
-    <ClInclude Include=".\IAddressMap.h" />
-    <ClInclude Include=".\IDataSource.h" />
-    <ClInclude Include=".\IDebugContainer.h" />
-    <ClInclude Include=".\ILoadCallback.h" />
-    <ClInclude Include=".\ImageAddrMap.h" />
-    <ClInclude Include=".\ImageDebugContainer.h" />
-    <ClInclude Include=".\ISession.h" />
-    <ClInclude Include=".\resource.h" />
-    <ClInclude Include=".\Session.h" />
-    <ClInclude Include=".\STIUtil.h" />
-    <ClInclude Include=".\targetver.h" />
+    <ClInclude Include="Common.h" />
+    <ClInclude Include="CVSTI.h" />
+    <ClInclude Include="CVSTIPublic.h" />
+    <ClInclude Include="DataSource.h" />
+    <ClInclude Include="IAddressMap.h" />
+    <ClInclude Include="IDataSource.h" />
+    <ClInclude Include="IDebugContainer.h" />
+    <ClInclude Include="ILoadCallback.h" />
+    <ClInclude Include="ImageAddrMap.h" />
+    <ClInclude Include="ImageDebugContainer.h" />
+    <ClInclude Include="ISession.h" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="Session.h" />
+    <ClInclude Include="STIUtil.h" />
+    <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include=".\CVSTI.rc" />
+    <ResourceCompile Include="CVSTI.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include=".\ReadMe.txt" />
+    <None Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\BinImage\BinImage.vcxproj">

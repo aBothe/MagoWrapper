@@ -15,81 +15,81 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include=".\Common.cpp">
+    <ClCompile Include="Common.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\CVSTIPublic.cpp">
+    <ClCompile Include="CVSTIPublic.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\DataSource.cpp">
+    <ClCompile Include="DataSource.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\dllmain.cpp">
+    <ClCompile Include="dllmain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\ImageAddrMap.cpp">
+    <ClCompile Include="ImageAddrMap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\ImageDebugContainer.cpp">
+    <ClCompile Include="ImageDebugContainer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include=".\Session.cpp">
+    <ClCompile Include="Session.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include=".\Common.h">
+    <ClInclude Include="Common.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\CVSTI.h">
+    <ClInclude Include="CVSTI.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\CVSTIPublic.h">
+    <ClInclude Include="CVSTIPublic.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\DataSource.h">
+    <ClInclude Include="DataSource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\IAddressMap.h">
+    <ClInclude Include="IAddressMap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\IDataSource.h">
+    <ClInclude Include="IDataSource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\IDebugContainer.h">
+    <ClInclude Include="IDebugContainer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\ILoadCallback.h">
+    <ClInclude Include="ILoadCallback.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\ImageAddrMap.h">
+    <ClInclude Include="ImageAddrMap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\ImageDebugContainer.h">
+    <ClInclude Include="ImageDebugContainer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\ISession.h">
+    <ClInclude Include="ISession.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\resource.h">
+    <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\Session.h">
+    <ClInclude Include="Session.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\STIUtil.h">
+    <ClInclude Include="STIUtil.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\targetver.h">
+    <ClInclude Include="targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include=".\CVSTI.rc">
+    <ResourceCompile Include="CVSTI.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Text Include=".\ReadMe.txt" />
+    <None Include="ReadMe.txt" />
   </ItemGroup>
 </Project>

@@ -92,7 +92,7 @@ namespace MagoST
 
         virtual bool NextType( TypeScope& scope, TypeHandle& handle ) = 0;
 
-        virtual bool GetTypeFromTypeIndex( WORD typeIndex, TypeHandle& handle ) = 0;
+        virtual bool GetTypeFromTypeIndex( TypeIndex typeIndex, TypeHandle& handle ) = 0;
 
         virtual HRESULT FindChildType( 
             TypeHandle parentHandle, 
@@ -113,5 +113,6 @@ namespace MagoST
 
         virtual bool FindLine( WORD seg, uint32_t offset, LineNumber& lineNumber ) = 0;
         virtual bool FindLineByNum( uint16_t compIndex, uint16_t fileIndex, uint16_t line, LineNumber& lineNumber) = 0;
+        virtual bool FindNextLineByNum( uint16_t compIndex, uint16_t fileIndex, uint16_t line, LineNumber& lineNumber ) = 0;
     };
 }

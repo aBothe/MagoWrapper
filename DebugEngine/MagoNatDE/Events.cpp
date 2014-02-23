@@ -360,7 +360,7 @@ namespace Mago
             mSearchKey = Name;
             if ( IProcess* process = prog->GetCoreProcess() )
             {
-                GetExceptionClassName( process, record->ExceptionInformation[0], &mExceptionName );
+                GetClassName( process, record->ExceptionInformation[0], &mExceptionName );
                 GetExceptionInfo( process, record->ExceptionInformation[0], &mExceptionInfo );
             }
 

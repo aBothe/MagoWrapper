@@ -304,22 +304,21 @@ namespace Mago
                 DWORD           tlsArrayPtrAddr = 0;
                 DWORD           tlsArrayAddr = 0;
                 DWORD           tlsBufAddr = 0;
-                //DebuggerProxy*  debuggerProxy = mThread->GetDebuggerProxy();
+                DebuggerProxy*  debuggerProxy = mThread->GetDebuggerProxy();
 
                 if ( !sym->GetAddressOffset( offset ) )
                     return E_FAIL;
 
                 // TODO: rename to GetTebBase
-                //tebAddr = mThread->GetCoreThread()->GetTlsBase();
-				tebAddr = mThread->GetTlsBase();
+                tebAddr = mThread->GetCoreThread()->GetTlsBase();
 
                 tlsArrayPtrAddr = tebAddr + offsetof( TEB32, ThreadLocalStoragePointer );
 
                 SIZE_T  lenRead = 0;
                 SIZE_T  lenUnreadable = 0;
 
-				hr = mDebuggerProxy->ReadMemory( 
-                    mProcess, 
+                hr = debuggerProxy->ReadMemory( 
+                    mThread->GetCoreProcess(), 
                     tlsArrayPtrAddr, 
                     4, 
                     lenRead, 
@@ -337,8 +336,8 @@ namespace Mago
                 }
 
                 // assuming TLS slot 0
-                hr = mDebuggerProxy->ReadMemory( 
-                    mProcess, 
+                hr = debuggerProxy->ReadMemory( 
+                    mThread->GetCoreProcess(), 
                     tlsArrayAddr, 
                     4, 
                     lenRead, 
@@ -436,7 +435,7 @@ namespace Mago
         size_t          targetSize = type->GetSize();
         SIZE_T          lenRead = 0;
         SIZE_T          lenUnreadable = 0;
-        //DebuggerProxy*  debuggerProxy = mThread->GetDebuggerProxy();
+        DebuggerProxy*  debuggerProxy = mThread->GetDebuggerProxy();
 
         // no value to get for complex/aggregate types
         if ( !type->IsScalar() 
@@ -449,8 +448,8 @@ namespace Mago
         if ( targetSize > sizeof targetBuf )
             return E_UNEXPECTED;
 
-		hr = mDebuggerProxy->ReadMemory( 
-            mProcess, 
+        hr = debuggerProxy->ReadMemory( 
+            mThread->GetCoreProcess(), 
             (Address) addr, 
             targetSize, 
             lenRead, 
@@ -1030,7 +1029,7 @@ namespace Mago
         uint8_t         sourceBuf[ sizeof( MagoEE::DataValue ) ] = { 0 };
         size_t          sourceSize = type->GetSize();
         SIZE_T          lenWritten = 0;
-        //DebuggerProxy*  debuggerProxy = mThread->GetDebuggerProxy();
+        DebuggerProxy*  debuggerProxy = mThread->GetDebuggerProxy();
 
         // no value to set for complex/aggregate types
         if ( !type->IsScalar() 
@@ -1109,8 +1108,8 @@ namespace Mago
         if ( FAILED( hr ) )
             return hr;
 
-		hr = mDebuggerProxy->WriteMemory( 
-            mProcess, 
+        hr = debuggerProxy->WriteMemory( 
+            mThread->GetCoreProcess(), 
             (Address) addr, 
             sourceSize, 
             lenWritten, 
@@ -1133,10 +1132,10 @@ namespace Mago
         SIZE_T          len = sizeToRead;
         SIZE_T          lenRead = 0;
         SIZE_T          lenUnreadable = 0;
-        //DebuggerProxy*  debuggerProxy = mThread->GetDebuggerProxy();
+        DebuggerProxy*  debuggerProxy = mThread->GetDebuggerProxy();
 
-        hr = mDebuggerProxy->ReadMemory(
-			mProcess,
+        hr = debuggerProxy->ReadMemory(
+            mThread->GetCoreProcess(),
             (Address) addr,
             len,
             lenRead,
@@ -1168,10 +1167,8 @@ namespace Mago
     ////////////////////////////////////////////////////////////////////////////// 
 
     HRESULT ExprContext::Init( 
-		DebuggerProxy* debuggerProxy,
-		IProcess* process,
         Module* module, 
-        ::Thread* thread,
+        Thread* thread,
         MagoST::SymHandle funcSH, 
         MagoST::SymHandle blockSH,
         Address pc,
@@ -1181,8 +1178,6 @@ namespace Mago
         _ASSERT( module != NULL );
         _ASSERT( thread != NULL );
 
-		mDebuggerProxy = debuggerProxy;
-		mProcess = process;
         mModule = module;
         mThread = thread;
         mFuncSH = funcSH;
@@ -1237,11 +1232,11 @@ namespace Mago
             hr = session->GetSymbolInfo( mFuncSH, infoData, symInfo );
             if ( SUCCEEDED( hr ) && symInfo )
             {
-                PasString*      pstrName = NULL;
+                SymString       pstrName;
                 if ( symInfo->GetName( pstrName ) )
                 {
                     std::string sym( name, nameLen );
-                    std::string scopeName( pstrName->GetName(), pstrName->GetLength() );
+                    std::string scopeName( pstrName.GetName(), pstrName.GetLength() );
                     while ( scopeName.length() > 0 )
                     {
                         std::string symName = scopeName + "." + sym;
@@ -1471,11 +1466,11 @@ namespace Mago
     {
         HRESULT                 hr = S_OK;
         MagoST::TypeIndex       typeIndex = 0;
-        PasString*              pstrName1 = NULL;
+        SymString               pstrName1;
         MagoST::TypeHandle      handle = { 0 };
         MagoST::SymInfoData     typeInfoData = { 0 };
         MagoST::ISymbolInfo*    typeInfo = NULL;
-        PasString*              pstrName2 = NULL;
+        SymString               pstrName2;
         RefPtr<MagoEE::Type>    refType;
         RefPtr<MagoST::ISession>    session;
 
@@ -1502,9 +1497,9 @@ namespace Mago
         if ( FAILED( hr ) )
             return hr;
 
-        if ( (pstrName2 != NULL)
-            && (pstrName1->GetLength() == pstrName2->GetLength()) 
-            && (strncmp( pstrName1->GetName(), pstrName2->GetName(), pstrName1->GetLength() ) == 0) )
+        if ( (pstrName2.GetName() != NULL)
+            && (pstrName1.GetLength() == pstrName2.GetLength()) 
+            && (strncmp( pstrName1.GetName(), pstrName2.GetName(), pstrName1.GetLength() ) == 0) )
         {
             // the typedef has the same name as the type, 
             // so let's use the referenced type directly, as if there's no typedef
@@ -1762,7 +1757,7 @@ namespace Mago
         MagoST::TypeHandle      paramListTH = { 0 };
         MagoST::SymInfoData     paramListInfoData = { 0 };
         MagoST::ISymbolInfo*    paramListInfo = NULL;
-        MagoST::TypeIndex*      paramTIs = NULL;
+        std::vector<MagoST::TypeIndex> paramTIs;
         RefPtr<MagoST::ISession>    session;
 
         if ( !mModule->GetSymbolSession( session ) )
@@ -1891,8 +1886,8 @@ namespace Mago
         case DMD_OEM_AARRAY:
         case DMD_OEM_DELEGATE:
             {
-                RefPtr<MagoEE::Type>    types[2];
-                MagoST::TypeIndex*      typeIndexes = NULL;
+                RefPtr<MagoEE::Type>           types[2];
+                std::vector<MagoST::TypeIndex> typeIndexes;
 
                 if ( count != 2 )
                     return E_FAIL;

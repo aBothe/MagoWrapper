@@ -11,9 +11,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <VCTargetsPath Condition="'$(VCTargetsPath11)' != '' and '$(VSVersion)' == '' and '$(VisualStudioVersion)' == ''">$(VCTargetsPath11)</VCTargetsPath>
-  </PropertyGroup>
-  <PropertyGroup Label="Globals">
     <ProjectGuid>{D4DE19AE-33EF-4B61-BFFE-784582BC68C1}</ProjectGuid>
     <RootNamespace>CVSym</RootNamespace>
     <Keyword>Win32Proj</Keyword>
@@ -21,13 +18,11 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
-    <PlatformToolset>v110</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
-    <PlatformToolset>v110</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
@@ -35,22 +30,19 @@
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\PropSheets\MagoDbg_3rdParty_Release.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\PropSheets\MagoDbg_3rdParty_Debug.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <_ProjectFileVersion>11.0.50522.1</_ProjectFileVersion>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
-    <IntDir>$(Configuration)\</IntDir>
-    <IncludePath>$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSDK_IncludePath);A:\Projects\tutorial.lib\Boost;$(IncludePath)</IncludePath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
-    <IntDir>$(Configuration)\</IntDir>
+    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(Configuration)\</IntDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(Configuration)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -84,39 +76,41 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include=".\Common.cpp">
+    <ClCompile Include="Common.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include=".\DebugStore.cpp" />
-    <ClCompile Include=".\SymbolInfo.cpp" />
-    <ClCompile Include=".\SymbolInfoBase.cpp" />
-    <ClCompile Include=".\TypeInfo.cpp" />
-    <ClCompile Include=".\Util.cpp" />
+    <ClCompile Include="DebugStore.cpp" />
+    <ClCompile Include="PDBDebugStore.cpp" />
+    <ClCompile Include="SymbolInfo.cpp" />
+    <ClCompile Include="SymbolInfoBase.cpp" />
+    <ClCompile Include="TypeInfo.cpp" />
+    <ClCompile Include="Util.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include=".\Common.h" />
-    <ClInclude Include=".\cvconst.h" />
-    <ClInclude Include=".\CVExeFmt.h" />
-    <ClInclude Include=".\cvinfo.h" />
-    <ClInclude Include=".\CVRec.h" />
-    <ClInclude Include=".\CVSym.h" />
-    <ClInclude Include=".\CVSymInternal.h" />
-    <ClInclude Include=".\CVSymPublic.h" />
-    <ClInclude Include=".\DebugStore.h" />
-    <ClInclude Include=".\Error.h" />
-    <ClInclude Include=".\ISymbolInfo.h" />
-    <ClInclude Include=".\OMFAddrTable.h" />
-    <ClInclude Include=".\OMFHashTable.h" />
-    <ClInclude Include=".\SymbolInfo.h" />
-    <ClInclude Include=".\SymbolInfoBase.h" />
-    <ClInclude Include=".\targetver.h" />
-    <ClInclude Include=".\TypeInfo.h" />
-    <ClInclude Include=".\Util.h" />
+    <ClInclude Include="Common.h" />
+    <ClInclude Include="cvconst.h" />
+    <ClInclude Include="CVExeFmt.h" />
+    <ClInclude Include="cvinfo.h" />
+    <ClInclude Include="CVRec.h" />
+    <ClInclude Include="CVSym.h" />
+    <ClInclude Include="CVSymInternal.h" />
+    <ClInclude Include="CVSymPublic.h" />
+    <ClInclude Include="DebugStore.h" />
+    <ClInclude Include="Error.h" />
+    <ClInclude Include="ISymbolInfo.h" />
+    <ClInclude Include="OMFAddrTable.h" />
+    <ClInclude Include="OMFHashTable.h" />
+    <ClInclude Include="PDBDebugStore.h" />
+    <ClInclude Include="SymbolInfo.h" />
+    <ClInclude Include="SymbolInfoBase.h" />
+    <ClInclude Include="targetver.h" />
+    <ClInclude Include="TypeInfo.h" />
+    <ClInclude Include="Util.h" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include=".\Notes.txt" />
-    <Text Include=".\ReadMe.txt" />
+    <None Include="Notes.txt" />
+    <None Include="ReadMe.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

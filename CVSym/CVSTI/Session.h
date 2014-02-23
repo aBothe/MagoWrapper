@@ -23,7 +23,7 @@ namespace MagoST
 
         uint64_t            mLoadAddr;
         RefPtr<DataSource>  mDataSource;
-        DebugStore*         mStore;         // valid while we hold onto data source
+        IDebugStore*        mStore;         // valid while we hold onto data source
         RefPtr<IAddressMap> mAddrMap;
 
     public:
@@ -79,7 +79,7 @@ namespace MagoST
 
         virtual bool NextType( TypeScope& scope, TypeHandle& handle );
 
-        virtual bool GetTypeFromTypeIndex( WORD typeIndex, TypeHandle& handle );
+        virtual bool GetTypeFromTypeIndex( TypeIndex typeIndex, TypeHandle& handle );
 
         virtual HRESULT FindChildType( 
             TypeHandle parentHandle, 
@@ -100,6 +100,7 @@ namespace MagoST
 
         virtual bool FindLine( WORD seg, uint32_t offset, LineNumber& lineNumber );
         virtual bool FindLineByNum( uint16_t compIndex, uint16_t fileIndex, uint16_t line, LineNumber& lineNumber );
+        virtual bool FindNextLineByNum( uint16_t compIndex, uint16_t fileIndex, uint16_t line, LineNumber& lineNumber );
 
     private:
         void SetLineNumberFromSegment( uint16_t compIx, uint16_t fileIx, const FileSegmentInfo& segInfo, uint16_t lineIndex, LineNumber& lineNumber );
