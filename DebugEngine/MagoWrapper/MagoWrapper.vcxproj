@@ -15,7 +15,7 @@
   </PropertyGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{D3343C74-0B42-4DCD-8429-00B553537EEB}</ProjectGuid>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <Keyword>ManagedCProj</Keyword>
     <RootNamespace>MagoWrapper</RootNamespace>
   </PropertyGroup>
