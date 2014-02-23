@@ -600,6 +600,11 @@ struct TypeInfo_Class
     const DynamicArray<MemberInfo> (*xgetMembers)(DynamicArray<char*>);
 };
 
+HRESULT GetClassName2( IProcess* process, MachineAddress addr, BSTR* pbstrClassName ) 
+{
+	return GetClassName(process, addr, pbstrClassName);
+}
+
 HRESULT GetClassName( IProcess* process, MachineAddress addr, BSTR* pbstrClassName )
 {
     _ASSERT( process != NULL );
