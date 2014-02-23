@@ -447,7 +447,7 @@ namespace MagoWrapper
 		{
 			MagoST::SymInfoData     infoData = { 0 };
 			MagoST::ISymbolInfo*    symInfo = NULL;
-			PasString*              pstrName = NULL;
+			SymString              pstrName;
 			CComBSTR                strName;
 
 
@@ -458,7 +458,7 @@ namespace MagoWrapper
 			if ( !symInfo->GetName( pstrName ) )
 				continue;
 
-			hr = Utf8To16( pstrName->GetName(), pstrName->GetLength(), strName.m_str );
+			hr = Utf8To16( pstrName.GetName(), pstrName.GetLength(), strName.m_str );
 			if ( FAILED( hr ) )
 				continue;
 
@@ -554,9 +554,9 @@ namespace MagoWrapper
                         continue;
 
                     if ( exactMatch )
-                        matches = ExactFileNameMatch( fileName, fileNameLen, fileInfo.Name, fileInfo.NameLength );
+                        matches = ExactFileNameMatch( fileName, fileNameLen, fileInfo.Name.ptr, fileInfo.Name.length );
                     else
-                        matches = PartialFileNameMatch( fileName, fileNameLen, fileInfo.Name, fileInfo.NameLength );
+                        matches = PartialFileNameMatch( fileName, fileNameLen, fileInfo.Name.ptr, fileInfo.Name.length );
 
                     if ( !matches )
                         continue;
@@ -623,13 +623,13 @@ namespace MagoWrapper
 				return false;
 
 			BSTR bstrFileName = L"";
-			hr = Utf8To16( fileInfo.Name, fileInfo.NameLength, bstrFileName );
+			hr = Utf8To16( fileInfo.Name.ptr, fileInfo.Name.length, bstrFileName );
 			if ( FAILED( hr ) )
 				return false;
 
 			*lineNum = line.Number;
 			*fileName = bstrFileName;
-			*fileNameLen = fileInfo.NameLength;
+			*fileNameLen = fileInfo.Name.length;
 
 			return true;
         }
@@ -737,11 +737,11 @@ namespace MagoWrapper
         HRESULT hr = S_OK;
         CComBSTR funcNameBstr;
 
-        PasString*  pstrName = NULL;
+        SymString  pstrName;
         if ( !symInfo->GetName( pstrName ) )
             return E_NOT_FOUND;
 
-        hr = Utf8To16( pstrName->GetName(), pstrName->GetLength(), funcNameBstr.m_str );
+        hr = Utf8To16( pstrName.GetName(), pstrName.GetLength(), funcNameBstr.m_str );
         if ( FAILED( hr ) )
             return hr;
 
@@ -838,7 +838,7 @@ namespace MagoWrapper
         if ( FAILED( hr ) )
             return hr;
 
-        hr = Utf8To16( fileInfo.Name, fileInfo.NameLength, info.Filename.m_str );
+        hr = Utf8To16( fileInfo.Name.ptr, fileInfo.Name.length, info.Filename.m_str );
         if ( FAILED( hr ) )
             return hr;
 
