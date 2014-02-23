@@ -4,9 +4,9 @@
 
 
  /* File created by MIDL compiler version 8.00.0595 */
-/* at Sat Feb 02 14:24:55 2013
+/* at Sun Feb 23 14:30:37 2014
  */
-/* Compiler settings for .\MagoNatDE.idl:
+/* Compiler settings for MagoNatDE.idl:
     Oicf, W1, Zp8, env=Win32 (32b run), target_arch=X86 8.00.0595 
     protocol : dce , ms_ext, c_ext, robust
     error checks: allocation ref bounds_check enum stub_data 
