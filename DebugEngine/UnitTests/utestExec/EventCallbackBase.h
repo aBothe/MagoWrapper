@@ -121,7 +121,6 @@ struct ThreadExitEventNode : public EventNode
 struct BreakpointEventNode : public EventNode
 {
     Address                 Address;
-    std::list< BPCookie >   Cookies;
 
     BreakpointEventNode()
         : Address( 0 )
@@ -130,7 +129,7 @@ struct BreakpointEventNode : public EventNode
     }
 };
 
-typedef std::list< boost::shared_ptr< EventNode > >   EventList;
+typedef std::list< std::shared_ptr< EventNode > >   EventList;
 
 
 class EventCallbackBase : public IEventCallback
@@ -144,7 +143,7 @@ class EventCallbackBase : public IEventCallback
     bool                    mTrackEvents;
     bool                    mTrackLastEvent;
     EventList               mEvents;
-    boost::shared_ptr<EventNode>   mLastEvent;
+    std::shared_ptr<EventNode>   mLastEvent;
 
     ModuleMap               mModules;
     RefPtr<IModule>         mProcMod;
@@ -169,7 +168,7 @@ public:
     uint32_t GetLastThreadId();
     const EventList& GetEvents();
     void ClearEvents();
-    boost::shared_ptr<EventNode> GetLastEvent();
+    std::shared_ptr<EventNode> GetLastEvent();
     bool GetLoadCompleted();
     bool GetProcessExited();
     uint32_t GetProcessExitCode();
@@ -185,19 +184,20 @@ public:
     virtual void OnModuleUnload( IProcess* process, Address baseAddr );
     virtual void OnOutputString( IProcess* process, const wchar_t* outputString );
     virtual void OnLoadComplete( IProcess* process, DWORD threadId );
-    virtual bool OnException( IProcess* process, DWORD threadId, bool firstChance, const EXCEPTION_RECORD* exceptRec );
-    virtual bool OnBreakpoint( IProcess* process, uint32_t threadId, Address address, Enumerator< BPCookie >* iter );
+    virtual RunMode OnException( IProcess* process, DWORD threadId, bool firstChance, const EXCEPTION_RECORD* exceptRec );
+    virtual RunMode OnBreakpoint( IProcess* process, uint32_t threadId, Address address, bool embedded );
     virtual void OnStepComplete( IProcess* process, uint32_t threadId );
     virtual void OnAsyncBreakComplete( IProcess* process, uint32_t threadId );
     virtual void OnError( IProcess* process, HRESULT hrErr, EventCode event );
 
-    virtual bool CanStepInFunction( IProcess* process, Address address );
+    virtual ProbeRunMode OnCallProbe( 
+        IProcess* process, uint32_t threadId, Address address, AddressRange& thunkRange );
 
     void PrintCallstacksX86( IProcess* process );
     void PrintCallstacksX64( IProcess* process );
 
 private:
-    void TrackEvent( const boost::shared_ptr<EventNode>& node );
+    void TrackEvent( const std::shared_ptr<EventNode>& node );
 };
 
 

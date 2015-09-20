@@ -7,26 +7,30 @@
 
 #include "Common.h"
 #include "Module.h"
+#include "DebuggerProxy.h"
 
 
 Module::Module( 
+               MagoCore::DebuggerProxy* debuggerProxy,
                Address imageBase, 
                uint32_t size, 
                uint16_t machine, 
-               const wchar_t* exePath, 
+               const wchar_t* path, 
                uint32_t debugInfoFileOffset, 
                uint32_t debugInfoSize )
 :   mRefCount( 0 ),
+    mDebuggerProxy( debuggerProxy ),
     mImageBase( imageBase ),
     mPrefImageBase( 0 ),
     mSize( size ),
     mMachine( machine ),
-    mExePath( exePath ),
+    mPath( path ),
     mDebugInfoFileOffset( debugInfoFileOffset ),
     mDebugInfoSize( debugInfoSize ),
     mDeleted( false )
 {
     _ASSERT( size > 0 );
+    _ASSERT( path != NULL );
 }
 
 Module::~Module()
@@ -74,9 +78,14 @@ uint16_t        Module::GetMachine()
     return mMachine;
 }
 
-const wchar_t*  Module::GetExePath()
+const wchar_t*  Module::GetPath()
 {
-    return mExePath.c_str();
+    return mPath.c_str();
+}
+
+const wchar_t*  Module::GetSymbolSearchPath()
+{
+    return mDebuggerProxy->GetSymbolSearchPath().data();
 }
 
 Address         Module::GetPreferredImageBase()
@@ -97,4 +106,10 @@ bool Module::IsDeleted()
 void Module::SetDeleted()
 {
     mDeleted = true;
+}
+
+bool Module::Contains( Address addr )
+{
+    Address modAddr = GetImageBase();
+    return (addr >= modAddr) && ((addr - modAddr) < GetSize());
 }

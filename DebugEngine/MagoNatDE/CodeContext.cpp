@@ -15,10 +15,10 @@ namespace Mago
     // CodeContext
 
     CodeContext::CodeContext()
-        :   mAddr( 0 )
+        :   mAddr( 0 ),
+            mPtrSize( 0 )
     {
         memset( &mFuncSH, 0, sizeof mFuncSH );
-        memset( &mBlockSH, 0, sizeof mBlockSH );
     }
 
     CodeContext::~CodeContext()
@@ -78,15 +78,9 @@ namespace Mago
 
         if ( (dwFields & CIF_ADDRESS) != 0 )
         {
-            // TODO: maybe we should have a central place for formatting
+            wchar_t addrStr[MaxAddrStringLength + 1] = L"";
 
-            const size_t    HexDigitCount = sizeof mAddr * 2;   // 2 chars a byte in hex
-            wchar_t addrStr[HexDigitCount + 2 + 1] = L"";
-
-            if ( sizeof mAddr > sizeof( int ) )
-                swprintf_s( addrStr, L"0x%016I64x", mAddr );
-            else
-                swprintf_s( addrStr, L"0x%08x", mAddr );
+            FormatAddress( addrStr, _countof( addrStr ), mAddr, mPtrSize, true );
 
             pInfo->bstrAddress = SysAllocString( addrStr );
 
@@ -96,6 +90,17 @@ namespace Mago
 
         if ( (dwFields & CIF_ADDRESSOFFSET) != 0 )
         {
+            uint32_t offset = 0;
+            if( GetAddressOffset( offset ) && offset != 0 )
+            {
+                wchar_t offStr[MaxAddrStringLength + 1] = L"";
+                swprintf_s( offStr, MaxAddrStringLength, L"+0x%x", offset );
+
+                pInfo->bstrAddressOffset = SysAllocString( offStr );
+
+                if ( pInfo->bstrAddressOffset != NULL )
+                    pInfo->dwFields |= CIF_ADDRESSOFFSET;
+            }
         }
 
         if ( (dwFields & CIF_ADDRESSABSOLUTE) != 0 )
@@ -112,10 +117,10 @@ namespace Mago
         if ( ppMemCxt == NULL )
             return E_INVALIDARG;
 
-        // just truncate the offset
-        Address newAddr = mAddr + (Address) dwCount;
+        // just truncate the offset in the new context
+        Address64 newAddr = mAddr + (Address64) dwCount;
 
-        return MakeCodeContext( newAddr, mModule, mDocContext, ppMemCxt );
+        return MakeCodeContext( newAddr, mModule, mDocContext, ppMemCxt, mPtrSize );
     }
 
     HRESULT CodeContext::Subtract(
@@ -125,10 +130,10 @@ namespace Mago
         if ( ppMemCxt == NULL )
             return E_INVALIDARG;
 
-        // just truncate the offset
-        Address newAddr = mAddr - (Address) dwCount;
+        // just truncate the offset in the new context
+        Address64 newAddr = mAddr - (Address64) dwCount;
 
-        return MakeCodeContext( newAddr, mModule, mDocContext, ppMemCxt );
+        return MakeCodeContext( newAddr, mModule, mDocContext, ppMemCxt, mPtrSize );
     }
 
     HRESULT CodeContext::Compare(
@@ -149,7 +154,7 @@ namespace Mago
         for ( int i = 0; i < (int) dwMemoryContextSetLen; i++ )
         {
             CComPtr<IMagoMemoryContext> magoCode;
-            Address     otherAddr = 0;
+            Address64   otherAddr = 0;
             bool        result = false;
 
             hr = rgpMemoryContextSet[i]->QueryInterface( __uuidof( IMagoMemoryContext ), (void**) &magoCode );
@@ -180,15 +185,33 @@ namespace Mago
                 result = (mAddr >= otherAddr);
                 break;
 
-                // TODO:
-            case CONTEXT_SAME_SCOPE:
-                result = (mAddr == otherAddr);
-                break;
-
             case CONTEXT_SAME_FUNCTION:
             case CONTEXT_SAME_MODULE:
             case CONTEXT_SAME_PROCESS:
-                break;
+            case CONTEXT_SAME_SCOPE: 
+            {
+                MagoST::SymHandle funcSH, blockSH;
+                RefPtr<Module> module;
+                if( magoCode->GetScope( funcSH, blockSH, module ) == S_OK )
+                {
+                    FindFunction();
+                    switch ( compare )
+                    {
+                    case CONTEXT_SAME_SCOPE: 
+                        result = memcmp( &mBlockSH.back(), &blockSH, sizeof( blockSH ) ) == 0;
+                        break;
+                    case CONTEXT_SAME_FUNCTION:
+                        result = memcmp( &mFuncSH, &funcSH, sizeof( mFuncSH ) ) == 0;
+                        break;
+                    case CONTEXT_SAME_MODULE:
+                        result = (mModule == module);
+                        break;
+                    case CONTEXT_SAME_PROCESS:
+                        // TODO
+                        break;
+                    }
+                }
+            }
             }
 
             if ( result )
@@ -231,9 +254,18 @@ namespace Mago
     ////////////////////////////////////////////////////////////////////////////// 
     // IMagoCodeContext
 
-    HRESULT CodeContext::GetAddress( Address& addr )
+    HRESULT CodeContext::GetAddress( Address64& addr )
     {
         addr = mAddr;
+        return S_OK;
+    }
+
+    HRESULT CodeContext::GetScope( MagoST::SymHandle& funcSH, MagoST::SymHandle& blockSH, RefPtr<Module>& module )
+    {
+        FindFunction();
+        funcSH = mFuncSH;
+        blockSH = mBlockSH.back();
+        module = mModule;
         return S_OK;
     }
 
@@ -241,10 +273,11 @@ namespace Mago
     //----------------------------------------------------------------------------
 
     HRESULT CodeContext::MakeCodeContext( 
-        Address newAddr, 
+        Address64 newAddr, 
         Module* mod, 
         IDebugDocumentContext2* docContext, 
-        IDebugMemoryContext2** ppMemCxt )
+        IDebugMemoryContext2** ppMemCxt,
+        int ptrSize )
     {
         if ( ppMemCxt == NULL )
             return E_INVALIDARG;
@@ -256,7 +289,7 @@ namespace Mago
         if ( FAILED( hr ) )
             return hr;
 
-        hr = newContext->Init( newAddr, mod, docContext );
+        hr = newContext->Init( newAddr, mod, docContext, ptrSize );
         if ( FAILED( hr ) )
             return hr;
 
@@ -265,11 +298,16 @@ namespace Mago
         return S_OK;
     }
 
-    HRESULT CodeContext::Init( Address addr, Module* mod, IDebugDocumentContext2* docContext )
+    HRESULT CodeContext::Init( 
+        Address64 addr, Module* mod, IDebugDocumentContext2* docContext, int ptrSize )
     {
+        if ( ptrSize < sizeof( UINT64 ) )
+            addr &= 0xFFFFFFFF;
+
         mAddr = addr;
         mModule = mod;
         mDocContext = docContext;
+        mPtrSize = ptrSize;
         return S_OK;
     }
 
@@ -344,6 +382,38 @@ namespace Mago
             return NULL;
 
         return bstrName.Detach();
+    }
+
+    bool CodeContext::GetAddressOffset( uint32_t& offset )
+    {
+        HRESULT hr = S_OK;
+        MagoST::SymInfoData         infoData = { 0 };
+        MagoST::ISymbolInfo*        symInfo = NULL;
+        RefPtr<MagoST::ISession>    session;
+        SymString                   pstrName;
+        CComBSTR                    bstrName;
+
+        hr = FindFunction();
+        if ( FAILED( hr ) )
+            return false;
+
+        if ( !mModule->GetSymbolSession( session ) )
+            return false;
+
+        hr = session->GetSymbolInfo( mFuncSH, infoData, symInfo );
+        if ( FAILED( hr ) )
+            return false;
+
+        uint32_t off;
+        uint16_t seg;
+        if( !symInfo->GetAddressOffset( off ) )
+            return false;
+        if( !symInfo->GetAddressSegment( seg ) )
+            return false;
+        uint64_t addr = session->GetVAFromSecOffset( seg, off );
+
+        offset = (uint32_t) ( mAddr - addr );
+        return true;
     }
 
     TEXT_POSITION CodeContext::GetFunctionOffset()

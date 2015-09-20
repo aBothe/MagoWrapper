@@ -4,7 +4,7 @@
 
 
  /* File created by MIDL compiler version 8.00.0595 */
-/* at Sun Feb 23 14:30:37 2014
+/* at Sat Sep 19 12:59:38 2015
  */
 /* Compiler settings for MagoNatDE.idl:
     Oicf, W1, Zp8, env=Win32 (32b run), target_arch=X86 8.00.0595 

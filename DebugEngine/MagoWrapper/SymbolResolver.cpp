@@ -1,7 +1,20 @@
 #include "stdafx.h"
 #include "SymbolResolver.h"
 
+
+#include "..\..\CVSym\CVSym\cvconst.h"
+
+#include "..\..\CVSym\CVSym\CVSymPublic.h"
+
+#include "..\MagoNatDE\Utility.h"
+#include "..\MagoNatDE\RegisterSet.h"
+#include "..\MagoNatDE\Config.h"
+#include "..\MagoNatDE\EnumFrameInfo.h"
+#include "..\MagoNatDE\Program.h"
+
 using namespace System::Runtime::InteropServices;
+
+const HRESULT E_NOT_FOUND = HRESULT_FROM_WIN32(ERROR_NOT_FOUND);
 
 namespace MagoWrapper
 {
@@ -28,13 +41,14 @@ namespace MagoWrapper
 
 
 
-	SymbolResolver::SymbolResolver(Debuggee^ debuggee)	
+	SymbolResolver::SymbolResolver(Debuggee^ debuggee, int ptrSize)
 	{
+		mPtrSize = ptrSize;
 		mDebuggee = debuggee;
 		mTypeEnv = NULL;
 
 		RefPtr<MagoEE::ITypeEnv> typeEnv;
-        HRESULT hr = MagoEE::EED::MakeTypeEnv( typeEnv.Ref() );
+		HRESULT hr = MagoEE::EED::MakeTypeEnv(mPtrSize, typeEnv.Ref());
 
 		mTypeEnv = typeEnv.Detach();
 
@@ -61,7 +75,7 @@ namespace MagoWrapper
 		IntPtr p = Marshal::StringToHGlobalAnsi(str);
 		const char* pStr = static_cast<char*>(p.ToPointer());
 
-		bool result = InternalGetAddressByLine(true, pStr, str->Length, line, line, bindings);
+		bool result = InternalGetAddressesByLine(true, pStr, str->Length, line, line, bindings);
 
 		Marshal::FreeHGlobal(p);
 
@@ -92,75 +106,12 @@ namespace MagoWrapper
 		return true;
 	}
 
-	String^ SymbolResolver::GetFunctionNameFromAddress(ULONG64 address, DWORD threadId)
-	{
-		BSTR bstrFuncName; 
-
-		bool modulefound = false;
-		for ( ModuleMap::iterator it = mDebuggee->GetModuleMap()->begin();
-			it != mDebuggee->GetModuleMap()->end();
-			it++ )
-		{
-			RefPtr<MagoST::ISession>    session;
-			RefPtr<Mago::Module> mod =  it->second;
-
-			if (!mod->Contains(address))
-				continue;
-
-			FRAMEINFO_FLAGS flags = { 0 };
-			flags = FIF_FUNCNAME_MODULE |
-						FIF_FUNCNAME_LINES |
-						FIF_FUNCNAME_OFFSET |
-						FIF_FUNCNAME_ARGS_ALL |
-						FIF_FUNCNAME_ARGS_TYPES |
-						FIF_FUNCNAME_ARGS_NAMES |
-						FIF_FUNCNAME_ARGS_VALUES;
-
-
-
-			HRESULT hr = S_OK;
-			hr = GetStackFrameName(
-						address, 
-						threadId,
-						mod, 
-						flags,
-						0,
-						&bstrFuncName);
-
-
-			break;
-		}
-
-		String^ v=gcnew String(bstrFuncName);
-		
-		return v;
-	}
-
-	HRESULT SymbolResolver::FindModuleContainingAddress(ULONG64 address, Mago::Module*& module)
-	{
-		for ( ModuleMap::iterator it = mDebuggee->GetModuleMap()->begin();
-			it != mDebuggee->GetModuleMap()->end();
-			it++ )
-		{
-			RefPtr<Mago::Module> mod =  it->second;
-
-			if (!mod->Contains( address ))
-				continue;
-			
-			module = mod.Get();
-			module->AddRef();
-			return S_OK;
-		}
-		return E_NOT_FOUND;
-	}
-
 	List<DebugScopedSymbol^>^ SymbolResolver::GetLocalSymbols(DWORD threadId)
 	{
-		List<DebugScopedSymbol^>^ list = gcnew List<DebugScopedSymbol^>();
-		
 		Address address = mDebuggee->GetCurrentInstructionAddress();
+		List<DebugScopedSymbol^>^ list = GetLocalSymbols(threadId, address);
 
-		return GetLocalSymbols(threadId, address);
+		return list;
 	}
 
 	List<DebugScopedSymbol^>^ SymbolResolver::GetLocalSymbols(DWORD threadId, Address frameAddress)
@@ -174,341 +125,264 @@ namespace MagoWrapper
 		return list;
 	}
 
-
-	List<DebugScopedSymbol^>^ SymbolResolver::GetChildSymbols(String^ expression)
+	List<DebugScopedSymbol^>^ SymbolResolver::GetChildSymbols(String^ expression, DWORD threadId)
 	{
+		CComModule _Module;
 		List<DebugScopedSymbol^>^ list = gcnew List<DebugScopedSymbol^>();
 
-		Address address = mDebuggee->GetCurrentInstructionAddress();
-		if (address == 0)
+		IDebugProperty2* dp = NULL;
+		HRESULT hr = EvaluateExpression(expression, threadId, &dp);
+		if (FAILED(hr))
 			return list;
 
-        HRESULT hr = S_OK;
-        RefPtr<MagoST::ISession>    session;
-        MagoST::SymHandle           funcSH = { 0 };
-        MagoST::SymHandle           childSH = { 0 };
-        MagoST::SymbolScope         scope = { 0 };
-        MagoST::SymHandle           blockSH = { 0 };
-		RefPtr<Mago::Module>		module;
+		DEBUGPROP_INFO_FLAGS diflags =
+			DEBUGPROP_INFO_NAME
+			| DEBUGPROP_INFO_FULLNAME
+			| DEBUGPROP_INFO_VALUE
+			| DEBUGPROP_INFO_TYPE
+			| DEBUGPROP_INFO_PROP
+			| DEBUGPROP_INFO_ATTRIB;
 
-		RefPtr<Thread>				thread;
-		RefPtr<Mago::ExprContext>	exprContext;
-		CONTEXT						context = { 0 };
-		RefPtr<Mago::IRegisterSet>	regSet;
-
-		if (! mDebuggee->GetCoreProcess()->FindThread(mDebuggee->StoppedThreadId, thread.Ref()) )
+		DEBUG_PROPERTY_INFO dpi;
+		hr = dp->GetPropertyInfo(diflags, 10, 1000, NULL, 0, &dpi);
+		if (FAILED(hr))
 			return list;
 
-		// TODO: we should get this another way
-		context.ContextFlags = CONTEXT_FULL 
-			| CONTEXT_FLOATING_POINT | CONTEXT_EXTENDED_REGISTERS;
-		if ( !GetThreadContext( thread->GetHandle(), &context ) )
+		bool hasChildren = (dpi.dwAttrib & DBG_ATTRIB_OBJ_IS_EXPANDABLE == DBG_ATTRIB_OBJ_IS_EXPANDABLE);
+		if (!hasChildren)
+			return list;
+		
+		CComModule _Module2;
+		IEnumDebugPropertyInfo2* edpi = NULL;	
+		hr = dp->EnumChildren(diflags, 10, guidFilterAllLocals, DBG_ATTRIB_ALL, NULL, 1000, &edpi);
+		if (FAILED(hr))
 			return list;
 
-		hr = FindModuleContainingAddress(address, module.Ref());
-		if ( FAILED( hr ) )
+		ULONG cnt = 0;
+		hr = edpi->GetCount(&cnt);
+		if (FAILED(hr))
 			return list;
 
-		hr = module->GetSymbolSession( session );
-		if ( FAILED( hr ) )
-			return list;
+		DEBUG_PROPERTY_INFO* dpiArray = new DEBUG_PROPERTY_INFO[cnt];
+		ULONG fetched = 0;
+		while (fetched < cnt) {
+			ULONG ft;
+			hr = edpi->Next(cnt - fetched, &dpiArray[fetched], &ft);
+			if (FAILED(hr))
+			{
+				delete [] dpiArray;
+				return list;
+			}
+			fetched += ft;
+		}
 
-		hr = FindFunction(address, module, funcSH, blockSH);
-		if ( FAILED( hr ) )
-			return list;
-
-		regSet = new Mago::RegisterSet( context, thread.Get() );
-
-		hr = session->SetChildSymbolScope( funcSH, scope );
-		if ( FAILED( hr ) )
-			return list;
-
-		hr = MakeExprContext(address, mDebuggee->StoppedThreadId, module, regSet, funcSH, blockSH, exprContext.Ref());
-		if ( FAILED(hr) )
-			return list;
-
-		RefPtr<MagoEE::IEEDParsedExpr>  parsedExpr;
-		MagoEE::EvalOptions				options = { 0 };
-		MagoEE::EvalResult				evalResult;
-        RefPtr<MagoEE::IEEDEnumValues>  enumVals;
-
-		pin_ptr<const wchar_t> parentFullName = PtrToStringChars(expression);  
-
-		hr = MagoEE::EED::ParseText( 
-			parentFullName, 
-			exprContext->GetTypeEnv(), 
-			exprContext->GetStringTable(), 
-			parsedExpr.Ref() );
-		if ( FAILED( hr ) )
-			return list;
-
-		hr = parsedExpr->Bind( options, exprContext );
-		if ( FAILED( hr ) )
-			return list;
-
-		hr = parsedExpr->Evaluate( options, exprContext, evalResult );
-		if ( FAILED( hr ) )
-			return list;
-
-        hr = MagoEE::EED::EnumValueChildren( 
-            exprContext, 
-            parentFullName, 
-			evalResult.ObjVal, 
-            exprContext->GetTypeEnv(),
-            exprContext->GetStringTable(),
-            enumVals.Ref() );
-
-		if ( FAILED(hr) )
-			return list;
-
-		int memberCount = min(enumVals->GetCount(), 100); 
-		for (int i = 0; i < memberCount; i++)
+		for (ULONG i = 0; i < fetched; i++)
 		{
-			MagoEE::EvalOptions		options = { 0 };
-			MagoEE::EvalResult		evalResult;
-			std::wstring			name;
-			std::wstring			fullName;
-            CComBSTR				strValue;
-            std::wstring			strType;
-			uint32_t				size = 0;
+			DEBUG_PROPERTY_INFO* dpi = &dpiArray[i];
+			DWORD size = 0;
+			dpi->pProperty->GetSize(&size);
+			bool hasChildren = (dpi->dwAttrib & DBG_ATTRIB_OBJ_IS_EXPANDABLE == DBG_ATTRIB_OBJ_IS_EXPANDABLE);
 
+			String^ scopedSymbolName = gcnew String(dpi->bstrName);
+			String^ scopedSymbolType = gcnew String(dpi->bstrType);
+			String^ scopedSymbolValue = nullptr;
+			if (!IsBadStringPtr(dpi->bstrValue, 255)) // == 0xCDCDCDCD
+				scopedSymbolValue = gcnew String(dpi->bstrValue);
+			else
+				scopedSymbolValue = gcnew String(String::Empty);
+			String^ scopedSymbolFullName = gcnew String(dpi->bstrFullName);
 
-			hr = enumVals->EvaluateNext(options, evalResult, name, fullName);
-			if ( FAILED(hr) )
-				continue;
-
-			hr = MagoEE::EED::FormatValue( exprContext, evalResult.ObjVal, 0, strValue.m_str );
-			if ( FAILED(hr) )
-				continue;
-
-            if ( evalResult.ObjVal._Type != NULL )
-                evalResult.ObjVal._Type->ToString( strType );
-
-			size = evalResult.ObjVal._Type->GetSize();
-
-			String^ scopedSymbolName = gcnew String( name.c_str() );
-			String^ scopedSymbolType = gcnew String( strType.c_str()  );
-			String^ scopedSymbolValue = gcnew String( strValue );
-			String^ scopedSymbolFullName = gcnew String( fullName.c_str() );
-
-			DebugScopedSymbol^ scopedSymbol = gcnew DebugScopedSymbol( scopedSymbolName, scopedSymbolType, scopedSymbolValue, scopedSymbolFullName, size, evalResult.HasChildren );
-
+			DebugScopedSymbol^ scopedSymbol = gcnew DebugScopedSymbol(scopedSymbolName, scopedSymbolType, scopedSymbolValue, scopedSymbolFullName, size, hasChildren);
 			list->Add(scopedSymbol);
 		}
 
+		delete [] dpiArray;
 		return list;
+	}
+
+	HRESULT SymbolResolver::EvaluateExpression(String^ expression, DWORD threadId, IDebugProperty2** dp)
+	{
+		CComModule _Module;
+		RefPtr<Mago::Thread> thread;
+		if (!mDebuggee->GetThread(threadId, thread))
+			return E_FAIL;
+
+		Mago::Thread::Callstack callstack;
+		HRESULT hr = thread->BuildCallstack(callstack);
+		if (FAILED(hr) || callstack.size() == 0)
+			return hr;
+
+		IDebugExpressionContext2* dectx = NULL;
+		hr = callstack[0]->GetExpressionContext(&dectx);
+		if (FAILED(hr))
+			return hr;
+
+		pin_ptr<const wchar_t> strExpression = PtrToStringChars(expression);  
+		
+		PARSEFLAGS pFlags = 
+			PARSE_EXPRESSION 
+			| PARSE_FUNCTION_AS_ADDRESS
+			| PARSE_DESIGN_TIME_EXPR_EVAL;
+
+		IDebugExpression2* de = NULL;
+		BSTR sErr;
+		UINT pichErr;
+		hr = dectx->ParseText(strExpression, pFlags, 10, &de, &sErr, &pichErr);
+		if (FAILED(hr))
+			return hr;
+		
+		EVALFLAGS evFlags =
+			EVAL_RETURNVALUE
+			| EVAL_NOSIDEEFFECTS
+			| EVAL_ALLOWBPS
+			| EVAL_ALLOWERRORREPORT
+			| EVAL_FUNCTION_AS_ADDRESS 
+			| EVAL_NOFUNCEVAL
+			| EVAL_NOEVENTS
+			| EVAL_DESIGN_TIME_EXPR_EVAL
+			| EVAL_ALLOW_IMPLICIT_VARS;
+		IDebugProperty2* _dp = NULL;
+		hr = de->EvaluateSync(evFlags, 1000, NULL, &_dp);
+		if (FAILED(hr))
+			return hr;
+
+		*dp = _dp;
+		return S_OK;
 	}
 
 	DebugScopedSymbol^ SymbolResolver::Evaluate(String^ expression, DWORD threadId)
 	{
-		Address address = mDebuggee->GetCurrentInstructionAddress();
-		if (address == 0)
+		IDebugProperty2* dp = NULL;
+		HRESULT hr = EvaluateExpression(expression, threadId, &dp);
+		if (FAILED(hr))
 			return nullptr;
 
-        HRESULT hr = S_OK;
-        RefPtr<MagoST::ISession>    session;
-        MagoST::SymHandle           funcSH = { 0 };
-        MagoST::SymHandle           childSH = { 0 };
-        MagoST::SymbolScope         scope = { 0 };
-        MagoST::SymHandle           blockSH = { 0 };
-		RefPtr<Mago::Module>		module;
-
-		RefPtr<Thread>				thread;
-		RefPtr<Mago::ExprContext>	exprContext;
-		CONTEXT						context = { 0 };
-		RefPtr<Mago::IRegisterSet>	regSet;
-
-		if (! mDebuggee->GetCoreProcess()->FindThread(threadId, thread.Ref()) )
+		DEBUGPROP_INFO_FLAGS diflags =
+			DEBUGPROP_INFO_NAME
+			| DEBUGPROP_INFO_FULLNAME
+			| DEBUGPROP_INFO_VALUE
+			| DEBUGPROP_INFO_TYPE
+			| DEBUGPROP_INFO_PROP
+			| DEBUGPROP_INFO_ATTRIB;
+		
+		DEBUG_PROPERTY_INFO dpi;
+		hr = dp->GetPropertyInfo(diflags, 10, 1000, NULL, 0, &dpi);
+		if (FAILED(hr))
 			return nullptr;
+		
+		DWORD size = 0;
+		dpi.pProperty->GetSize(&size);
+		bool hasChildren = (dpi.dwAttrib & DBG_ATTRIB_OBJ_IS_EXPANDABLE == DBG_ATTRIB_OBJ_IS_EXPANDABLE);
 
-		context.ContextFlags = CONTEXT_FULL 
-			| CONTEXT_FLOATING_POINT | CONTEXT_EXTENDED_REGISTERS;
-		if ( !GetThreadContext( thread->GetHandle(), &context ) )
-			return nullptr;
+		String^ scopedSymbolName = gcnew String(dpi.bstrName);
+		String^ scopedSymbolType = gcnew String(dpi.bstrType);
+		String^ scopedSymbolValue = nullptr;
+		if (!IsBadStringPtr(dpi.bstrValue, 255)) // == 0xCDCDCDCD
+			scopedSymbolValue = gcnew String(dpi.bstrValue);
+		else
+			scopedSymbolValue = gcnew String(String::Empty);
+		String^ scopedSymbolFullName = gcnew String(dpi.bstrFullName);
 
-		hr = FindModuleContainingAddress(address, module.Ref());
-		if ( FAILED( hr ) )
-			return nullptr;
-
-		hr = module->GetSymbolSession( session );
-		if ( FAILED( hr ) )
-			return nullptr;
-
-		hr = FindFunction(address, module, funcSH, blockSH);
-		if ( FAILED( hr ) )
-			return nullptr;
-
-		regSet = new Mago::RegisterSet( context, thread.Get() );
-
-		hr = session->SetChildSymbolScope( funcSH, scope );
-		if ( FAILED( hr ) )
-			return nullptr;
-
-		hr = MakeExprContext(address, threadId, module, regSet, funcSH, blockSH, exprContext.Ref());
-		if ( FAILED(hr) )
-			return nullptr;
-
-		RefPtr<MagoEE::IEEDParsedExpr>  parsedExpr;
-		MagoEE::EvalOptions				options = { 0 };
-		MagoEE::EvalResult				evalResult;
-        RefPtr<MagoEE::IEEDEnumValues>  enumVals;
-		std::wstring					fullName;
-        CComBSTR						strValue;
-        std::wstring					strType;
-		uint32_t						size = 0;
-
-		options.AllowAssignment = true;
-
-		pin_ptr<const wchar_t> strExpression = PtrToStringChars(expression);  
-
-		hr = MagoEE::EED::ParseText( 
-				strExpression, 
-				exprContext->GetTypeEnv(), 
-				exprContext->GetStringTable(), 
-				parsedExpr.Ref() );
-		if ( FAILED( hr ) )
-			return nullptr;
-
-		hr = parsedExpr->Bind( options, exprContext );
-		if ( FAILED( hr ) )
-			return nullptr;
-
-		hr = parsedExpr->Evaluate( options, exprContext, evalResult );
-		if ( FAILED( hr ) )
-			return nullptr;
-
-		MagoEE::EED::FormatValue( exprContext, evalResult.ObjVal, 0, strValue.m_str );
-		if ( FAILED( hr ) )
-			return nullptr;
-
-        if ( evalResult.ObjVal._Type != NULL )
-            evalResult.ObjVal._Type->ToString( strType );
-
-		size = evalResult.ObjVal._Type->GetSize();
-
-		String^ scopedSymbolName = gcnew String( strExpression );
-		String^ scopedSymbolType = gcnew String( strType.c_str() );
-		String^ scopedSymbolValue = gcnew String( strValue );
-		String^ scopedSymbolFullName = gcnew String( strExpression );
-
-		return gcnew DebugScopedSymbol( scopedSymbolName, scopedSymbolType, scopedSymbolValue, scopedSymbolFullName, size, evalResult.HasChildren );
+		DebugScopedSymbol^ scopedSymbol = gcnew DebugScopedSymbol(scopedSymbolName, scopedSymbolType, scopedSymbolValue, scopedSymbolFullName, size, hasChildren);
+		return scopedSymbol;
 	}
 
 	HRESULT SymbolResolver::EnumerateLocalSymbols(ULONG64 address, DWORD threadId, List<DebugScopedSymbol^>^ list)
 	{
 
         HRESULT hr = S_OK;
-        RefPtr<MagoST::ISession>    session;
-        MagoST::SymHandle           funcSH = { 0 };
-        MagoST::SymHandle           blockSH = { 0 };
-		RefPtr<Mago::Module>		module;
-
-		if (address == 0)
-			return E_NOT_FOUND;
-
-		hr = FindModuleContainingAddress(address, module.Ref());
-		if ( FAILED(hr) )
-			return hr;
-
-		hr = module->GetSymbolSession( session );
-		if ( FAILED( hr ) )
-			return hr;
-
-		hr = FindFunction(address, module, funcSH, blockSH);
-		if ( FAILED( hr ) )
-			return hr;
-
-        MagoST::SymbolScope         scope = { 0 };
-        MagoST::SymHandle           childSH = { 0 };
-		RefPtr<Thread>				thread;
-		RefPtr<Mago::ExprContext>	exprContext;
-		CONTEXT						context = { 0 };
-		RefPtr<Mago::IRegisterSet>	regSet;
-
-		if (! mDebuggee->GetCoreProcess()->FindThread(threadId, thread.Ref()) )
+		CComModule _Module;
+		RefPtr<Mago::Thread> thread;
+		if (!mDebuggee->GetThread(threadId, thread))
 			return E_FAIL;
 
-		context.ContextFlags = CONTEXT_FULL 
-			| CONTEXT_FLOATING_POINT | CONTEXT_EXTENDED_REGISTERS;
-		if ( !GetThreadContext( thread->GetHandle(), &context ) )
-			return E_FAIL;
-		
-		regSet = new Mago::RegisterSet( context, thread.Get() );
+		Mago::Thread::Callstack callstack;
+		thread->BuildCallstack(callstack);
 
-		hr = session->SetChildSymbolScope( funcSH, scope );
-		if ( FAILED( hr ) )
-			return hr;
-
-		hr = MakeExprContext(address, threadId, module, regSet, funcSH, blockSH, exprContext.Ref());
-		if ( FAILED(hr) )
-			return hr;
-
-		while ( session->NextSymbol( scope, childSH ) )
+		Mago::StackFrame* sfrm = NULL;
+		int i = 0;
+		for (Mago::Thread::Callstack::const_iterator it = callstack.begin();
+			it != callstack.end();
+			it++, i++)
 		{
-			MagoST::SymInfoData     infoData = { 0 };
-			MagoST::ISymbolInfo*    symInfo = NULL;
-			SymString              pstrName;
-			CComBSTR                strName;
+			Mago::Address64 addr;
+			Mago::Address64 eip;
+			hr = (*it)->GetAddress(addr);
+			if (FAILED(hr))
+				return hr;
 
+			hr = (*it)->GetAddress(eip);
+			if (FAILED(hr))
+				return hr;
 
-			hr = session->GetSymbolInfo( childSH, infoData, symInfo );
-			if ( FAILED( hr ) )
-				continue;
-
-			if ( !symInfo->GetName( pstrName ) )
-				continue;
-
-			hr = Utf8To16( pstrName.GetName(), pstrName.GetLength(), strName.m_str );
-			if ( FAILED( hr ) )
-				continue;
-
-			RefPtr<MagoEE::IEEDParsedExpr>  parsedExpr;
-			MagoEE::EvalOptions		options = { 0 };
-			MagoEE::EvalResult		evalResult;
-			std::wstring			fullName;
-            CComBSTR				strValue;
-            std::wstring			strType;
-			uint32_t				size = 0;
-
-			hr = MagoEE::EED::ParseText( 
-				strName.m_str, 
-				exprContext->GetTypeEnv(), 
-				exprContext->GetStringTable(), 
-				parsedExpr.Ref() );
-			if ( FAILED( hr ) )
-				continue;
-
-			hr = parsedExpr->Bind( options, exprContext );
-			if ( FAILED( hr ) )
-				continue;
-
-			hr = parsedExpr->Evaluate( options, exprContext, evalResult );
-			if ( FAILED( hr ) )
-				continue;
-
-			MagoEE::EED::FormatValue( exprContext, evalResult.ObjVal, 0, strValue.m_str );
-			if ( FAILED( hr ) )
-				continue;
-
-            if ( evalResult.ObjVal._Type != NULL )
-                evalResult.ObjVal._Type->ToString( strType );
-
-			size = evalResult.ObjVal._Type->GetSize();
-
-			String^ scopedSymbolName = gcnew String( strName.m_str );
-			String^ scopedSymbolType = gcnew String( strType.c_str() );
-			String^ scopedSymbolValue = gcnew String( strValue );
-			String^ scopedSymbolFullName = gcnew String( strName.m_str );
-
-			DebugScopedSymbol^ scopedSymbol = gcnew DebugScopedSymbol( scopedSymbolName, scopedSymbolType, scopedSymbolValue, scopedSymbolFullName, size, evalResult.HasChildren );
-
-			list->Add(scopedSymbol);
+			if (addr == address)
+			{
+				sfrm = (*it);
+				break;
+			}
 		}
+
+		if (!sfrm)
+			return E_FAIL;
+
+		DEBUGPROP_INFO_FLAGS diflags =
+			DEBUGPROP_INFO_NAME
+			| DEBUGPROP_INFO_FULLNAME
+			| DEBUGPROP_INFO_VALUE
+			| DEBUGPROP_INFO_TYPE
+			| DEBUGPROP_INFO_PROP
+			| DEBUGPROP_INFO_ATTRIB;
+
+		IEnumDebugPropertyInfo2* pi = NULL;	
+		ULONG fetched = 0;
+		hr = sfrm->EnumProperties(diflags, 10, guidFilterAllLocalsPlusArgs, 2000, &fetched, &pi);
+		//array.Detach();
+		
+		if (FAILED(hr))
+			return hr;
+
+		ULONG cnt = fetched;
+		fetched = 0;
+		DEBUG_PROPERTY_INFO* dpiArray = new DEBUG_PROPERTY_INFO[cnt];
+		while (fetched < cnt)
+		{
+			ULONG ft = 0;
+			pi->Next(cnt - fetched, &dpiArray[fetched], &ft);
+			if (FAILED(hr))
+			{
+				delete[] dpiArray;
+				return hr;
+			}
+
+			fetched += ft;
+		}
+
+		for (ULONG i = 0; i < cnt; i++)
+		{
+			DWORD size = 0;
+			dpiArray[i].pProperty->GetSize(&size);
+			bool hasChildren = (dpiArray[i].dwAttrib & DBG_ATTRIB_OBJ_IS_EXPANDABLE == DBG_ATTRIB_OBJ_IS_EXPANDABLE);
+
+			String^ scopedSymbolName = gcnew String(dpiArray[i].bstrName);
+			String^ scopedSymbolType = gcnew String(dpiArray[i].bstrType);
+			String^ scopedSymbolValue = nullptr;
+			if (!IsBadStringPtr(dpiArray[i].bstrValue, 255)) // == 0xCDCDCDCD
+				scopedSymbolValue = gcnew String(dpiArray[i].bstrValue);
+			else
+				scopedSymbolValue = gcnew String(String::Empty);
+			String^ scopedSymbolFullName = gcnew String(dpiArray[i].bstrFullName);
+
+			DebugScopedSymbol^ scopedSymbol = gcnew DebugScopedSymbol(scopedSymbolName, scopedSymbolType, scopedSymbolValue, scopedSymbolFullName, size, hasChildren);
+
+			list->Add(scopedSymbol); 
+		}
+
+		delete[] dpiArray;
 
 		return S_OK;		
 	}
 
-    bool SymbolResolver::InternalGetAddressByLine( 
+    bool SymbolResolver::InternalGetAddressesByLine( 
         bool exactMatch, 
         const char* fileName, 
         size_t fileNameLen, 
@@ -516,71 +390,56 @@ namespace MagoWrapper
         uint16_t reqLineEnd,
         std::list<AddressBinding>& bindings )
     {
-        GuardedArea guard( *mModGuard );
 
-        HRESULT hr = S_OK;
-        bool    foundMatch = false;
+		CComModule _Module;
+		Mago::Program* prog = mDebuggee->GetProgram();
+		IEnumDebugModules2* edm = NULL;
+		HRESULT hr = prog->EnumModules(&edm);
+		if (FAILED(hr))
+			return false;
 
-        for ( ModuleMap::iterator it = mDebuggee->GetModuleMap()->begin();
-            it != mDebuggee->GetModuleMap()->end();
-            it++ )
-        {
-            RefPtr<MagoST::ISession>    session;
-			Mago::Module*  mod =  reinterpret_cast<Mago::Module*>(it->second.Get());
-            uint32_t compCount = 0;
+		ULONG cnt;
+		hr = edm->GetCount(&cnt);
+		if (FAILED(hr))
+			return false;
 
-            if ( !mod->GetSymbolSession( session ) )
-                continue;
+		IDebugModule2** dmArray = new IDebugModule2*[cnt];
+		ULONG fetched = 0;
+		while (fetched < cnt)
+		{
+			ULONG ft = 0;
+			hr = edm->Next(cnt - fetched, &dmArray[fetched], &ft);
+			if (FAILED(hr)) {
+				delete [] dmArray;
+				return false;
+			}
+			fetched += ft;
+		}
+		
+		for (ULONG i = 0; i < cnt; i++)
+		{
+			Mago::Module* mod = (Mago::Module*)dmArray[i];
+			//Mago::Module* mod = reinterpret_cast<Mago::Module*>(it->second.Get());
 
-            hr = session->GetCompilandCount( compCount );
-            if ( FAILED( hr ) )
-                continue;
+			RefPtr<MagoST::ISession> session;
+			if (!mod->GetSymbolSession(session))
+				continue;
 
-            for ( uint16_t compIx = 1; compIx <= compCount; compIx++ )
-            {
-                MagoST::CompilandInfo   compInfo = { 0 };
+			std::list<MagoST::LineNumber> lines;
+			if (!session->FindLines(exactMatch, fileName, fileNameLen, reqLineStart, reqLineEnd, lines))
+				continue;
 
-                hr = session->GetCompilandInfo( compIx, compInfo );
-                if ( FAILED( hr ) )
-                    continue;
+			for (std::list<MagoST::LineNumber>::iterator it = lines.begin(); it != lines.end(); ++it)
+			{
+				bindings.push_back(AddressBinding());
+				bindings.back().Addr = session->GetVAFromSecOffset(it->Section, it->Offset);
+				bindings.back().Mod = mod;
+			}
+		}
 
-                for ( uint16_t fileIx = 0; fileIx < compInfo.FileCount; fileIx++ )
-                {
-                    MagoST::FileInfo    fileInfo = { 0 };
-                    bool                matches = false;
+		delete [] dmArray;
 
-                    hr = session->GetFileInfo( compIx, fileIx, fileInfo );
-                    if ( FAILED( hr ) )
-                        continue;
-
-                    if ( exactMatch )
-                        matches = ExactFileNameMatch( fileName, fileNameLen, fileInfo.Name.ptr, fileInfo.Name.length );
-                    else
-                        matches = PartialFileNameMatch( fileName, fileNameLen, fileInfo.Name.ptr, fileInfo.Name.length );
-
-                    if ( !matches )
-                        continue;
-
-                    foundMatch = true;
-
-                    MagoST::LineNumber  line = { 0 };
-                    if ( !session->FindLineByNum( compIx, fileIx, (uint16_t) reqLineStart, line ) )
-                        continue;
-
-                    // do the line ranges overlap?
-                    if ( ((line.Number <= reqLineEnd) && (line.NumberEnd >= reqLineStart)) )
-                    {
-                        line.NumberEnd = line.Number;
-
-                        bindings.push_back( AddressBinding() );
-                        bindings.back().Addr = session->GetVAFromSecOffset( line.Section, line.Offset );
-                        bindings.back().Mod = mod;
-                    }
-                }
-            }
-        }
-
-        return foundMatch;
+		return bindings.size() > 0;
     }
 
     bool SymbolResolver::InternalGetLineByAddress( 
@@ -589,16 +448,38 @@ namespace MagoWrapper
         WORD* fileNameLen, 
 		uint16_t* lineNum)
     {
-        GuardedArea guard( *mModGuard );
+		CComModule _Module;
+		Mago::Program* prog = mDebuggee->GetProgram();
+		IEnumDebugModules2* edm = NULL;
+		HRESULT hr = prog->EnumModules(&edm);
+		if (FAILED(hr))
+			return false;
 
-        HRESULT hr = S_OK;
+		ULONG cnt;
+		hr = edm->GetCount(&cnt);
+		if (FAILED(hr))
+			return false;
 
-        for ( ModuleMap::iterator it = mDebuggee->GetModuleMap()->begin();
-            it != mDebuggee->GetModuleMap()->end();
-            it++ )
-        {
+		IDebugModule2** dmArray = new IDebugModule2*[cnt];
+		ULONG fetched = 0;
+		while (fetched < cnt)
+		{
+			ULONG ft = 0;
+			hr = edm->Next(cnt - fetched, &dmArray[fetched], &ft);
+			if (FAILED(hr)) {
+				delete [] dmArray;
+				return false;
+			}
+			fetched += ft;
+		}
+
+		bool found = false;
+		for (ULONG i = 0; i < cnt; i++)
+		{
+			Mago::Module* mod = (Mago::Module*)dmArray[i];
+			//Mago::Module*  mod =  reinterpret_cast<Mago::Module*>(it->second.Get());
+
             RefPtr<MagoST::ISession>    session;
-			Mago::Module*  mod =  reinterpret_cast<Mago::Module*>(it->second.Get());
             uint32_t compCount = 0;
 
 			if ( !mod->Contains(address))
@@ -611,185 +492,32 @@ namespace MagoWrapper
 			uint32_t    offset = 0;
 			sec = session->GetSecOffsetFromVA( address, offset );
 			if ( sec == 0 )
-				return false;
+				continue;
 
 			MagoST::LineNumber line = { 0 };
 			if ( !session->FindLine( sec, offset, line ) )
-				return false;
+				continue;
 
 			MagoST::FileInfo    fileInfo = { 0 };
 			hr = session->GetFileInfo( line.CompilandIndex, line.FileIndex, fileInfo );
 			if ( FAILED( hr ) )
-				return false;
+				continue;
 
 			BSTR bstrFileName = L"";
 			hr = Utf8To16( fileInfo.Name.ptr, fileInfo.Name.length, bstrFileName );
 			if ( FAILED( hr ) )
-				return false;
+				continue;
 
 			*lineNum = line.Number;
 			*fileName = bstrFileName;
 			*fileNameLen = fileInfo.Name.length;
 
-			return true;
-        }
+			found =  true;
+			break;
+		}
 
-        return false;
-    }
-
-    HRESULT SymbolResolver::GetStackFrameName( 
-		uintptr_t address,
-		DWORD threadId,
-		Mago::Module* module,
-        FRAMEINFO_FLAGS flags, 
-        UINT radix, 
-        BSTR* funcName )
-    {
-        _ASSERT( funcName != NULL );
-        HRESULT hr = S_OK;
-        CString fullName;
-
-        if ( (flags & FIF_FUNCNAME_MODULE) != 0 )
-        {
-            if ( module != NULL )
-            {
-                CComBSTR modNameBstr;
-                module->GetName( modNameBstr );
-                fullName.Append( modNameBstr );
-                fullName.AppendChar( L'!' );
-            }
-        }
-
-        hr = AppendFunctionNameWithSymbols( address, threadId, module, flags, radix, fullName );
-        if ( FAILED( hr ) )
-        {
-            hr = AppendFunctionNameWithAddress( address, module, flags, radix, fullName );
-            if ( FAILED( hr ) )
-                return hr;
-        }
-
-        *funcName = fullName.AllocSysString();
-
-        return hr;
-    }
-
-    HRESULT SymbolResolver::AppendFunctionNameWithAddress( 
-		uintptr_t address,
-		Mago::Module* module,
-        FRAMEINFO_FLAGS flags, 
-        UINT radix, 
-        CString& fullName )
-    {
-        C_ASSERT( sizeof address == 4 );
-        fullName.AppendFormat( L"%08x", address );
-
-        return S_OK;
-    }
-
-    HRESULT SymbolResolver::AppendFunctionNameWithSymbols( 
-		uintptr_t address,
-		DWORD threadId,
-		Mago::Module* module,
-        FRAMEINFO_FLAGS flags, 
-        UINT radix, 
-        CString& fullName )
-    {
-        HRESULT hr = S_OK;
-        RefPtr<MagoST::ISession>    session;
-        MagoST::SymInfoData         infoData = { 0 };
-        MagoST::ISymbolInfo*        symInfo = NULL;
-
-        if ( module == NULL )
-            return E_NOT_FOUND;
-
-        if ( !module->GetSymbolSession( session ) )
-            return E_NOT_FOUND;
-
-		MagoST::SymHandle func = { 0 };
-		MagoST::SymHandle  block = { 0 };
-
-        hr = FindFunction(address, module, func, block);
-        if ( FAILED( hr ) )
-            return hr;
-
-        hr = session->GetSymbolInfo( func, infoData, symInfo );
-        if ( FAILED( hr ) )
-            return hr;
-
-        hr = AppendFunctionNameWithSymbols( address, threadId, module, flags, radix, session, symInfo, func, fullName );
-
-        return hr;
-    }
-
-    HRESULT SymbolResolver::AppendFunctionNameWithSymbols( 
-		uintptr_t address,
-		DWORD threadId,
-		Mago::Module* module,
-        FRAMEINFO_FLAGS flags, 
-        UINT radix, 
-        MagoST::ISession* session,
-        MagoST::ISymbolInfo* symInfo, 
-		MagoST::SymHandle& func,
-        CString& fullName )
-    {
-        _ASSERT( session != NULL );
-        _ASSERT( symInfo != NULL );
-        HRESULT hr = S_OK;
-        CComBSTR funcNameBstr;
-
-        SymString  pstrName;
-        if ( !symInfo->GetName( pstrName ) )
-            return E_NOT_FOUND;
-
-        hr = Utf8To16( pstrName.GetName(), pstrName.GetLength(), funcNameBstr.m_str );
-        if ( FAILED( hr ) )
-            return hr;
-
-        fullName.Append( funcNameBstr );
-        fullName.AppendChar( L'(' );
-
-        if ( (flags & FIF_FUNCNAME_ARGS_ALL) != 0 )
-        {
-            AppendArgs( flags, radix, address, threadId, module, session, symInfo, func, fullName);
-        }
-
-        fullName.AppendChar( L')' );
-
-        bool hasLineInfo = false;
-        Address baseAddr = 0;
-
-        if ( (flags & FIF_FUNCNAME_LINES) != 0 )
-        {
-            StackLineInfo line;
-            if ( SUCCEEDED( GetStackLineInfo( address, module, line ) ) )
-            {
-                hasLineInfo = true;
-                baseAddr = line.Address;
-                // lines are 1-based to user, but 0-based from symbol store
-                DWORD lineNumber = line.LineBegin.dwLine + 1;
-                const wchar_t* lineStr = GetString( IDS_LINE );
-
-                fullName.AppendFormat( L" %s %u", lineStr, lineNumber );
-            }
-        }
-
-        if ( !hasLineInfo )
-        {
-            uint16_t sec = 0;
-            uint32_t offset = 0;
-
-            symInfo->GetAddressSegment( sec );
-            symInfo->GetAddressOffset( offset );
-            baseAddr = (Address) session->GetVAFromSecOffset( sec, offset );
-        }
-
-        if ( ((flags & FIF_FUNCNAME_OFFSET) != 0) && (address != baseAddr) )
-        {
-            const wchar_t* bytesStr = GetString( IDS_BYTES );
-            fullName.AppendFormat( L" + 0x%x %s", address - baseAddr, bytesStr );
-        }
-
-        return S_OK;
+		delete [] dmArray;
+		return found;
     }
 
     HRESULT SymbolResolver::GetStackLineInfo(
@@ -846,196 +574,6 @@ namespace MagoWrapper
         info.LangGuid = GetDLanguageId();
 
         return hr;
-    }
-
-	HRESULT SymbolResolver::FindFunction(
-		uintptr_t address, 
-		Mago::Module* module, 
-		MagoST::SymHandle& func,  
-		MagoST::SymHandle& block)
-    {
-        HRESULT hr = S_OK;
-        RefPtr<MagoST::ISession>    session;
-        MagoST::SymHandle           symHandle = { 0 };
-
-        // already found
-        if ( memcmp( &func, &symHandle, sizeof (func) ) != 0 )
-            return S_OK;
-
-        if ( module == NULL )
-            return E_NOT_FOUND;
-
-        if ( !module->GetSymbolSession( session ) )
-            return E_NOT_FOUND;
-
-        uint16_t    sec = 0;
-        uint32_t    offset = 0;
-        sec = session->GetSecOffsetFromVA( address, offset );
-        if ( sec == 0 )
-            return E_NOT_FOUND;
-
-        hr = session->FindOuterSymbolByAddr( MagoST::SymHeap_GlobalSymbols, sec, offset, symHandle );
-        if ( FAILED( hr ) )
-        {
-            hr = session->FindOuterSymbolByAddr( MagoST::SymHeap_StaticSymbols, sec, offset, symHandle );
-            if ( FAILED( hr ) )
-            {
-                hr = session->FindOuterSymbolByAddr( MagoST::SymHeap_PublicSymbols, sec, offset, symHandle );
-                if ( FAILED( hr ) )
-                    return hr;
-            }
-        }
-
-        func = symHandle;
-
-        hr = session->FindInnermostSymbol( func, sec, offset, block );
-
-        return S_OK;
-    }
-	
-    HRESULT SymbolResolver::AppendArgs(
-        FRAMEINFO_FLAGS flags, 
-        UINT radix, 
-		uintptr_t address, 
-		DWORD threadId,
-		Mago::Module* module, 
-        MagoST::ISession* session,
-        MagoST::ISymbolInfo* symInfo,
-		MagoST::SymHandle& func,
-        CString& outputStr )
-    {
-        _ASSERT( session != NULL );
-        _ASSERT( symInfo != NULL );
-        HRESULT             hr = S_OK;
-        MagoST::SymbolScope funcScope = { 0 };
-        MagoST::SymHandle   childSH = { 0 };
-        MagoST::SymHandle   blockSH = { 0 };
-        int                 paramCount = 0;
-        std::wstring        typeStr;
-
-		RefPtr<Thread> thread;
-		if (! mDebuggee->GetCoreProcess()->FindThread(threadId, thread.Ref()) )
-			return E_FAIL;
-
-		CONTEXT         context = { 0 };
-		RefPtr<Mago::IRegisterSet> regSet;
-
-		context.ContextFlags = CONTEXT_FULL 
-			| CONTEXT_FLOATING_POINT | CONTEXT_EXTENDED_REGISTERS;
-		if ( !GetThreadContext( thread->GetHandle(), &context ) )
-			return E_FAIL;
-		
-		regSet = new Mago::RegisterSet( context, thread.Get() );
-		RefPtr<Mago::ExprContext> exprContext;
-
-		hr = MakeExprContext(address, threadId, module, regSet, func, blockSH, exprContext.Ref());
-		if ( FAILED(hr) )
-			return hr;
-
-        hr = session->SetChildSymbolScope( func, funcScope );
-        if ( FAILED( hr ) )
-            return hr;
-
-        while ( session->NextSymbol( funcScope, childSH ) )
-        {
-            MagoST::SymInfoData     childData = { 0 };
-            MagoST::ISymbolInfo*    childSym = NULL;
-            MagoST::SymTag          tag = MagoST::SymTagNull;
-            RefPtr<MagoEE::Type>    type;
-            RefPtr<MagoEE::Declaration> decl;
-
-            session->GetSymbolInfo( childSH, childData, childSym );
-            if ( childSym == NULL )
-                continue;
-
-            tag = childSym->GetSymTag();
-            if ( tag == MagoST::SymTagEndOfArgs )
-                break;
-
-            exprContext->MakeDeclarationFromSymbol( childSH, decl.Ref() );
-            if ( decl == NULL )
-                continue;
-
-            if ( paramCount > 0 )
-                outputStr.AppendChar( L',' );
-
-            if ( (flags & FIF_FUNCNAME_ARGS_TYPES) != 0 )
-            {
-                if ( decl->GetType( type.Ref() ) )
-                {
-                    typeStr.clear();
-                    type->ToString( typeStr );
-                    outputStr.AppendFormat( L" %.*s", typeStr.size(), typeStr.c_str() );
-                }
-            }
-
-            if ( (flags & FIF_FUNCNAME_ARGS_NAMES) != 0 )
-            {
-                outputStr.AppendFormat( L" %s", decl->GetName() );
-            }
-
-            if ( (flags & FIF_FUNCNAME_ARGS_VALUES) != 0 )
-            {
-                MagoEE::DataObject resultObj = { 0 };
-                CComBSTR valueBstr;
-
-                hr = exprContext->Evaluate( decl, resultObj );
-                if ( hr == S_OK )
-                {
-                    hr = MagoEE::EED::FormatValue( exprContext, resultObj, radix, valueBstr.m_str );
-                    if ( hr == S_OK )
-                    {
-                        outputStr.AppendFormat( L" = %.*s", valueBstr.Length(), valueBstr.m_str );
-                    }
-                }
-            }
-
-            paramCount++;
-        }
-
-        if ( paramCount > 0 )
-            outputStr.AppendChar( L' ' );
-
-        return S_OK;
-    }
-
-	HRESULT SymbolResolver::MakeExprContext(
-		ULONG64 address, 
-		DWORD threadId,
-		Mago::Module* module,
-		Mago::IRegisterSet* regSet,
-		MagoST::SymHandle& func,  
-		MagoST::SymHandle& block, 
-		Mago::ExprContext*& exprCtx)
-    {
-        HRESULT hr = S_OK;
-
-        hr = FindFunction(address, module, func, block);
-
-        if ( exprCtx == NULL )
-        {
-            GuardedArea guard( *mExprContextGuard );
-
-            if ( exprCtx == NULL )
-            {
-				RefPtr<Thread> thread;				
-				if (!mDebuggee->GetCoreProcess()->FindThread(threadId, thread.Ref() ))
-					return E_FAIL;
-
-                RefPtr<Mago::ExprContext>         exprContext;
-                hr = MakeCComObject( exprContext );
-                if ( FAILED( hr ) )
-                    return hr;
-
-				hr = exprContext->Init( mDebuggee->GetDebuggerProxy(), mDebuggee->GetCoreProcess(), module, thread, func, block, address, regSet );
-                if ( FAILED( hr ) )
-                    return hr;
-
-				exprCtx = exprContext.Detach();
-            }
-        }
-
-        return S_OK;
     }
 
 }

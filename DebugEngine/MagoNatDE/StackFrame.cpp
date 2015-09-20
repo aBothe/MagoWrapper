@@ -20,10 +20,10 @@
 namespace Mago
 {
     StackFrame::StackFrame()
-        :   mPC( 0 )
+        :   mPC( 0 ),
+            mPtrSize( 0 )
     {
         memset( &mFuncSH, 0, sizeof mFuncSH );
-        memset( &mBlockSH, 0, sizeof mBlockSH );
     }
 
     StackFrame::~StackFrame()
@@ -47,7 +47,7 @@ namespace Mago
         hr = GetDocumentContext( &docContext );
         // there doesn't have to be a document context
 
-        hr = codeContext->Init( mPC, mModule, docContext );
+        hr = codeContext->Init( mPC, mModule, docContext, mPtrSize );
         if ( FAILED( hr ) )
             return hr;
 
@@ -236,7 +236,7 @@ namespace Mago
                 if ( FAILED( hr ) )
                     return hr;
 
-				hr = exprContext->Init( mThread->GetDebuggerProxy(), mThread->GetCoreProcess(), mModule, mThread->GetCoreThread(), mFuncSH, mBlockSH, mPC, mRegSet );
+                hr = exprContext->Init( mModule, mThread, mFuncSH, mBlockSH, mPC, mRegSet );
                 if ( FAILED( hr ) )
                     return hr;
 
@@ -294,6 +294,7 @@ namespace Mago
         HRESULT hr = S_OK;
         CComPtr<IDebugProperty2>    rootProp;
 
+
         hr = GetDebugProperty( &rootProp );
         if ( FAILED( hr ) )
             return hr;
@@ -331,20 +332,28 @@ namespace Mago
 
     //----------------------------------------------------------------------------
 
+	Address64 StackFrame::GetEip()
+	{
+		return mRegSet->GetPC();
+	}
+
     void StackFrame::Init(
-        Address pc,
+        Address64 pc,
         IRegisterSet* regSet,
         Thread* thread,
-        Module* module )
+        Module* module,
+        int ptrSize )
     {
         _ASSERT( regSet != NULL );
         _ASSERT( thread != NULL );
         // there might be no module
+        _ASSERT( ptrSize == 4 || ptrSize == 8 );
 
         mPC = pc;
         mRegSet = regSet;
         mThread = thread;
         mModule = module;
+        mPtrSize = ptrSize;
     }
 
     HRESULT StackFrame::GetLineInfo( LineInfo& info )
@@ -383,7 +392,7 @@ namespace Mago
         if ( info.LineEnd.dwColumn > 0 )
             info.LineEnd.dwColumn--;
 
-        info.Address = (Address) session->GetVAFromSecOffset( line.Section, line.Offset );
+        info.Address = (Address64) session->GetVAFromSecOffset( line.Section, line.Offset );
 
         MagoST::FileInfo    fileInfo = { 0 };
         hr = session->GetFileInfo( line.CompilandIndex, line.FileIndex, fileInfo );
@@ -439,8 +448,11 @@ namespace Mago
         UINT radix, 
         CString& fullName )
     {
-        C_ASSERT( sizeof mPC == 4 );
-        fullName.AppendFormat( L"%08x", mPC );
+        wchar_t addrStr[MaxAddrStringLength + 1] = L"";
+
+        FormatAddress( addrStr, _countof( addrStr ), mPC, mPtrSize, false );
+
+        fullName.Append( addrStr );
 
         return S_OK;
     }
@@ -508,7 +520,7 @@ namespace Mago
         fullName.AppendChar( L')' );
 
         bool hasLineInfo = false;
-        Address baseAddr = 0;
+        Address64 baseAddr = 0;
 
         if ( (flags & FIF_FUNCNAME_LINES) != 0 )
         {
@@ -532,13 +544,13 @@ namespace Mago
 
             symInfo->GetAddressSegment( sec );
             symInfo->GetAddressOffset( offset );
-            baseAddr = (Address) session->GetVAFromSecOffset( sec, offset );
+            baseAddr = (Address64) session->GetVAFromSecOffset( sec, offset );
         }
 
         if ( ((flags & FIF_FUNCNAME_OFFSET) != 0) && (mPC != baseAddr) )
         {
             const wchar_t* bytesStr = GetString( IDS_BYTES );
-            fullName.AppendFormat( L" + 0x%x %s", mPC - baseAddr, bytesStr );
+            fullName.AppendFormat( L" + 0x%x %s", (uint32_t) (mPC - baseAddr), bytesStr );
         }
 
         return S_OK;
@@ -572,6 +584,7 @@ namespace Mago
             MagoST::SymInfoData     childData = { 0 };
             MagoST::ISymbolInfo*    childSym = NULL;
             MagoST::SymTag          tag = MagoST::SymTagNull;
+            MagoST::DataKind        kind = MagoST::DataIsUnknown;
             RefPtr<MagoEE::Type>    type;
             RefPtr<MagoEE::Declaration> decl;
 
@@ -582,6 +595,9 @@ namespace Mago
             tag = childSym->GetSymTag();
             if ( tag == MagoST::SymTagEndOfArgs )
                 break;
+
+            if ( !childSym->GetDataKind( kind ) || kind != MagoST::DataIsParam )
+                continue;
 
             mExprContext->MakeDeclarationFromSymbol( childSH, decl.Ref() );
             if ( decl == NULL )
@@ -690,4 +706,11 @@ namespace Mago
 
         return S_OK;
     }
+
+
+	HRESULT StackFrame::GetAddress(Address64& address)
+	{
+		address = mPC;
+		return S_OK;
+	}
 }

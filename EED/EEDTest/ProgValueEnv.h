@@ -13,7 +13,6 @@
 
 
 class Exec;
-class IMachine;
 class IProcess;
 struct IDiaSession;
 struct IDiaSymbol;
@@ -31,7 +30,6 @@ class ProgramValueEnv : public IValueEnv, public IScope
     uint32_t                    mStopRva;
     RefPtr<MagoEE::ITypeEnv>    mTypeEnv;
     Exec*                       mExec;
-    IMachine*                   mMachine;
     IProcess*                   mProc;
     uint32_t                    mThreadId;
 #if 0
@@ -41,7 +39,7 @@ class ProgramValueEnv : public IValueEnv, public IScope
 #else
     MagoST::ISession*           mSymSession;
     MagoST::SymHandle           mFuncSH;
-    MagoST::SymHandle           mBlockSH;
+    std::vector<MagoST::SymHandle> mBlockSH;
     MagoST::TypeIndex           mThisTI;
 #endif
 
@@ -53,8 +51,8 @@ public:
 
     virtual HRESULT FindObject( const wchar_t* name, MagoEE::Declaration*& decl );
 
-    virtual boost::shared_ptr<DataObj> GetValue( MagoEE::Declaration* decl );
-    virtual boost::shared_ptr<DataObj> GetValue( MagoEE::Address address, MagoEE::Type* type );
+    virtual std::shared_ptr<DataObj> GetValue( MagoEE::Declaration* decl );
+    virtual std::shared_ptr<DataObj> GetValue( MagoEE::Address address, MagoEE::Type* type );
     virtual void SetValue( MagoEE::Address address, DataObj* obj );
     virtual RefPtr<MagoEE::Declaration> GetThis();
     virtual RefPtr<MagoEE::Declaration> GetSuper();
@@ -128,8 +126,8 @@ private:
     HRESULT GetRegValue( DWORD reg, MagoEE::DataValueKind& kind, MagoEE::DataValue& value );
     HRESULT GetSegBase( DWORD segReg, DWORD& base );
 
-    boost::shared_ptr<DataObj> GetValue( MagoEE::Address address, MagoEE::Type* type, MagoEE::Declaration* decl );
+    std::shared_ptr<DataObj> GetValue( MagoEE::Address address, MagoEE::Type* type, MagoEE::Declaration* decl );
 
     HRESULT FindOuterSymbolByRVA( DWORD rva, MagoST::SymHandle& handle );
-    HRESULT FindSymbolByRVA( DWORD rva, MagoST::SymHandle& handle, MagoST::SymHandle& innermostChild );
+    HRESULT FindSymbolByRVA( DWORD rva, MagoST::SymHandle& handle, std::vector<MagoST::SymHandle>& innermostChild );
 };

@@ -11,7 +11,13 @@
 #include "EnumPropertyInfo.h"
 #include "EnumX86Reg.h"
 #include "RegisterSet.h"
+#include "ArchData.h"
+#include "Thread.h"
+#include "IDebuggerProxy.h"
+#include "RegProperty.h"
+#include "ICoreProcess.h"
 #include <MagoEED.h>
+#include <MagoCVConst.h>
 
 
 namespace Mago
@@ -168,7 +174,6 @@ namespace Mago
 
         HRESULT hr = S_OK;
         RefPtr<MagoST::ISession>    session;
-        MagoST::SymHandle           funcSH = { 0 };
         MagoST::SymHandle           childSH = { 0 };
         MagoST::SymbolScope         scope = { 0 };
 
@@ -176,41 +181,44 @@ namespace Mago
         if ( FAILED( hr ) )
             return hr;
 
-        funcSH = exprContext->GetFunctionSH();
+        const std::vector<MagoST::SymHandle>& blockSH = exprContext->GetBlockSH();
 
-        hr = session->SetChildSymbolScope( funcSH, scope );
-        if ( FAILED( hr ) )
-            return hr;
-
-        // TODO: need to go down the block's ancestors until you get to the function
-
-        while ( session->NextSymbol( scope, childSH ) )
+        for ( auto it = blockSH.rbegin(); it != blockSH.rend(); it++)
         {
-            MagoST::SymInfoData     infoData = { 0 };
-            MagoST::ISymbolInfo*    symInfo = NULL;
-            SymString               pstrName;
-            CComBSTR                bstrName;
-
-            hr = session->GetSymbolInfo( childSH, infoData, symInfo );
+            hr = session->SetChildSymbolScope( *it, scope );
             if ( FAILED( hr ) )
-                continue;
+                return hr;
 
-            if ( !symInfo->GetName( pstrName ) )
-                continue;
+            while ( session->NextSymbol( scope, childSH ) )
+            {
+                MagoST::SymInfoData     infoData = { 0 };
+                MagoST::ISymbolInfo*    symInfo = NULL;
+                SymString               pstrName;
+                CComBSTR                bstrName;
 
-            hr = Utf8To16( pstrName.GetName(), pstrName.GetLength(), bstrName.m_str );
-            if ( FAILED( hr ) )
-                continue;
+                hr = session->GetSymbolInfo( childSH, infoData, symInfo );
+                if ( FAILED( hr ) )
+                    continue;
+            
+                if ( symInfo->GetSymTag() != MagoST::SymTagData )
+                    continue;
 
-            mNames.push_back( bstrName );
-            bstrName.Detach();
+                if ( !symInfo->GetName( pstrName ) )
+                    continue;
+
+                hr = Utf8To16( pstrName.GetName(), pstrName.GetLength(), bstrName.m_str );
+                if ( FAILED( hr ) )
+                    continue;
+
+                mNames.push_back( bstrName );
+                bstrName.Detach();
+            }
         }
 
         mExprContext = exprContext;
 
         return S_OK;
     }
-
 
     ////////////////////////////////////////////////////////////////////////////// 
 
@@ -267,6 +275,28 @@ namespace Mago
     {
         return E_NOTIMPL;
     }
+
+    HRESULT EnumRegisters(
+        Thread* thread,
+        IRegisterSet* regSet,
+        DEBUGPROP_INFO_FLAGS dwFields,
+        DWORD dwRadix,
+        IEnumDebugPropertyInfo2** ppEnum )
+    {
+        _ASSERT( thread != NULL );
+
+        ArchData*           archData = NULL;
+
+        archData = thread->GetCoreProcess()->GetArchData();
+
+        return EnumRegisters(
+            archData,
+            regSet,
+            thread,
+            dwFields,
+            dwRadix,
+            ppEnum );
+    }
     
     HRESULT FrameProperty::EnumChildren( 
         DEBUGPROP_INFO_FLAGS dwFields,
@@ -286,7 +316,8 @@ namespace Mago
         }
         else if ( guidFilter == guidFilterRegisters )
         {
-            return EnumX86Registers(
+            return EnumRegisters(
+                mExprContext->GetThread(),
                 mRegSet,
                 dwFields,
                 dwRadix,

@@ -18,6 +18,9 @@
     <ClCompile Include="Common.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="DebuggerProxy.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="DecodeX86.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -33,6 +36,9 @@
     <ClCompile Include="MachineX86Base.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MakeMachine.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="Module.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -40,9 +46,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Process.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Steppers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Thread.cpp">
@@ -56,7 +59,13 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CommandFunctor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="Common.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DebuggerProxy.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DecodeX86.h">
@@ -95,7 +104,7 @@
     <ClInclude Include="MachineX86Base.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MakeMachineX86.h">
+    <ClInclude Include="MakeMachine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Module.h">
@@ -105,9 +114,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Process.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Stepper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="targetver.h">
@@ -127,7 +133,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Notes.txt" />
-    <None Include="ReadMe.txt" />
+    <Text Include="Notes.txt" />
+    <Text Include="ReadMe.txt" />
   </ItemGroup>
 </Project>

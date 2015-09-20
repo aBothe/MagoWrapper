@@ -3,20 +3,21 @@
 
 namespace MagoWrapper
 {
-	ExceptionRecord::ExceptionRecord(IProcess* process, const EXCEPTION_RECORD* exceptionRec)
+	ExceptionRecord::ExceptionRecord(Mago::DRuntime* druntime, const EXCEPTION_RECORD64* exceptionRec)
 	{
-		mProcess = process;
+		mDRuntime = druntime;
+		//mProcess = process;
 		mExceptionRecord = exceptionRec;
 		mInnerExceptionRecord = nullptr;
 
 		if (mExceptionRecord->ExceptionRecord)
-			mInnerExceptionRecord = gcnew ExceptionRecord(process, mExceptionRecord->ExceptionRecord);
+			mInnerExceptionRecord = gcnew ExceptionRecord(druntime, (const EXCEPTION_RECORD64*)mExceptionRecord->ExceptionRecord);
 	}
 
 	String^ ExceptionRecord::ExceptionName::get()
 	{
 		CComBSTR exceptionName = NULL;		
-		HRESULT hr = GetClassName2(mProcess, mExceptionRecord->ExceptionInformation[0], &exceptionName);
+		HRESULT hr = mDRuntime->GetClassName(mExceptionRecord->ExceptionInformation[0], &exceptionName);
 		if ( FAILED(hr) )
 			exceptionName = "";
 
@@ -31,7 +32,7 @@ namespace MagoWrapper
 	{
 		CComBSTR exceptionInfo = NULL;
 		
-		HRESULT hr = GetExceptionInfo(mProcess, mExceptionRecord->ExceptionInformation[0], &exceptionInfo);
+		HRESULT hr = mDRuntime->GetExceptionInfo(mExceptionRecord->ExceptionInformation[0], &exceptionInfo);
 		if ( FAILED(hr) )
 			exceptionInfo = "";
 
@@ -50,7 +51,7 @@ namespace MagoWrapper
 
 	PVOID ExceptionRecord::ExceptionAddress::get()
 	{
-		return mExceptionRecord->ExceptionAddress;
+		return (PVOID)mExceptionRecord->ExceptionAddress;
 	}
 
 	ExceptionRecord^ ExceptionRecord::InnerExceptionRecord::get()

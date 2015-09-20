@@ -115,7 +115,7 @@ namespace MagoEE
                         result.HasString = true;
                 }
 
-                if ( type->IsPointer() || type->IsSArray() || type->IsDArray() 
+                if ( type->IsPointer() || type->IsSArray() || type->IsDArray()  || type->IsAArray()
                     || (type->AsTypeStruct() != NULL) )
                 {
                     result.HasChildren = true;
@@ -136,9 +136,9 @@ namespace MagoEE
         FreePropTables();
     }
 
-    HRESULT MakeTypeEnv( ITypeEnv*& typeEnv )
+    HRESULT MakeTypeEnv( int ptrSize, ITypeEnv*& typeEnv )
     {
-        RefPtr<TypeEnv> env = new TypeEnv();
+        RefPtr<TypeEnv> env = new TypeEnv( ptrSize );
 
         if ( env == NULL )
             return E_OUTOFMEMORY;
@@ -225,6 +225,10 @@ namespace MagoEE
         else if ( parentVal._Type->IsDArray() )
         {
             en = new EEDEnumDArray();
+        }
+        else if ( parentVal._Type->IsAArray() )
+        {
+            en = new EEDEnumAArray();
         }
         else if ( parentVal._Type->AsTypeStruct() != NULL )
         {

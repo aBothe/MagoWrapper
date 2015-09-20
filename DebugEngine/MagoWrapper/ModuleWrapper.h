@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "..\Exec\IModule.h"
 
 namespace MagoWrapper {
 

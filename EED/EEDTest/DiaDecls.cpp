@@ -11,7 +11,6 @@
 #include <MagoCVConst.h>
 
 using MagoEE::Type;
-using namespace boost;
 using namespace MagoST;
 
 
@@ -218,6 +217,11 @@ bool DiaDecl::IsBaseClass()
     return mSymInfo->GetSymTag() == MagoST::SymTagBaseClass;
 }
 
+bool DiaDecl::IsStaticField()
+{
+    return false;
+}
+
 HRESULT DiaDecl::FindObject( const wchar_t* name, Declaration*& decl )
 {
     return HRESULT_FROM_WIN32( ERROR_NOT_FOUND );
@@ -386,7 +390,7 @@ HRESULT TypeDiaDecl::FindObject( const wchar_t* name, Declaration*& decl )
 {
     HRESULT             hr = S_OK;
     int                 nzChars = 0;
-    scoped_array<char>  nameChars;
+    UniquePtr<char[]>   nameChars;
     MagoST::TypeHandle  childTH = { 0 };
     MagoST::TypeIndex   flistIndex = 0;
     MagoST::TypeHandle  flistHandle = { 0 };
@@ -402,11 +406,11 @@ HRESULT TypeDiaDecl::FindObject( const wchar_t* name, Declaration*& decl )
     if ( nzChars == 0 )
         return HRESULT_FROM_WIN32( GetLastError() );
 
-    nameChars.reset( new char[ nzChars ] );
-    if ( nameChars.get() == NULL )
+    nameChars.Attach( new char[ nzChars ] );
+    if ( nameChars.Get() == NULL )
         return E_OUTOFMEMORY;
 
-    nzChars = WideCharToMultiByte( CP_UTF8, flags, name, -1, nameChars.get(), nzChars, NULL, NULL );
+    nzChars = WideCharToMultiByte( CP_UTF8, flags, name, -1, nameChars.Get(), nzChars, NULL, NULL );
     if ( nzChars == 0 )
         return HRESULT_FROM_WIN32( GetLastError() );
 
@@ -420,7 +424,7 @@ HRESULT TypeDiaDecl::FindObject( const wchar_t* name, Declaration*& decl )
         if ( !mSession->GetTypeFromTypeIndex( flistIndex, flistHandle ) )
             return HRESULT_FROM_WIN32( ERROR_NOT_FOUND );
 
-        hr = mSession->FindChildType( flistHandle, nameChars.get(), nzChars-1, childTH );
+        hr = mSession->FindChildType( flistHandle, nameChars.Get(), nzChars-1, childTH );
         if ( hr == S_OK )
             break;
 

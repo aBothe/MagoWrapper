@@ -6,7 +6,7 @@
 
 using namespace System;
 using namespace System::Collections::Generic;
-using Mago::DebuggerProxy;
+using MagoCore::DebuggerProxy;
 
 namespace MagoWrapper
 {
@@ -24,6 +24,7 @@ namespace MagoWrapper
 		SymbolResolver^ CreateSymbolResolver(Debuggee^ debuggee);
 
 		void LaunchExecutable(String^ cmdLine, String^ dir, Debuggee^ debuggee);
-
+	private:
+		Mago::Engine* mEngine;
 	};
 }

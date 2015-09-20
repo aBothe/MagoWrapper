@@ -19,7 +19,6 @@
 #include <MagoCVConst.h>
 
 using namespace std;
-using namespace boost;
 using MagoEE::Type;
 using namespace MagoST;
 
@@ -33,13 +32,11 @@ using namespace MagoST;
 class EventCallback : public EventCallbackBase
 {
     bool        mBPHit;
-    BPCookie    mBPCookie;
     uint32_t    mLastThreadId;
 
 public:
     EventCallback()
         :   mBPHit( false ),
-            mBPCookie( 0 ),
             mLastThreadId( 0 )
     {
     }
@@ -49,22 +46,20 @@ public:
         return mLastThreadId;
     }
 
-    bool TakeBPHit( BPCookie& cookie )
+    bool TakeBPHit()
     {
         if ( !mBPHit )
             return false;
 
-        cookie = mBPCookie;
         mBPHit = false;
         return true;
     }
 
-    bool OnBreakpoint( IProcess* process, uint32_t threadId, Address address, Enumerator<BPCookie>* iter )
+    RunMode OnBreakpoint( IProcess* process, uint32_t threadId, Address address, bool embedded )
     {
         mLastThreadId = threadId;
         mBPHit = true;
-        mBPCookie = iter->GetCurrent();
-        return false;
+        return RunMode_Break;
     }
 };
 
@@ -74,7 +69,6 @@ ProgramValueEnv::ProgramValueEnv( const wchar_t* progPath, uint32_t stopRva, Mag
     mStopRva( stopRva ),
     mTypeEnv( typeEnv ),
     mExec( NULL ),
-    mMachine( NULL ),
     mProc( NULL ),
     mThreadId( 0 ),
     mSymSession( NULL ),
@@ -84,7 +78,6 @@ ProgramValueEnv::ProgramValueEnv( const wchar_t* progPath, uint32_t stopRva, Mag
 #endif
 {
     memset( &mFuncSH, 0, sizeof mFuncSH );
-    memset( &mBlockSH, 0, sizeof mBlockSH );
 }
 
 ProgramValueEnv::~ProgramValueEnv()
@@ -97,8 +90,6 @@ ProgramValueEnv::~ProgramValueEnv()
         mSymSession->Release();
     if ( mProc != NULL )
         mProc->Release();
-    if ( mMachine != NULL )
-        mMachine->Release();
     if ( mExec != NULL )
         delete mExec;
 }
@@ -106,23 +97,17 @@ ProgramValueEnv::~ProgramValueEnv()
 HRESULT ProgramValueEnv::StartProgram()
 {
     HRESULT hr = S_OK;
-    RefPtr<IMachine>        mac;
     RefPtr<EventCallback>   callback;
     RefPtr<IProcess>        proc;
     LaunchInfo              launchInfo = { 0 };
-    const BPCookie          Cookie = 1;
     RefPtr<IModule>         procMod;
-
-    hr = MakeMachineX86( mac.Ref() );
-    if ( FAILED( hr ) )
-        return hr;
 
     auto_ptr<Exec>  exec( new Exec() );
 
     callback = new EventCallback();
     callback->SetExec( exec.get() );
 
-    hr = exec->Init( mac, callback );
+    hr = exec->Init( callback );
     if ( FAILED( hr ) )
         return hr;
 
@@ -137,9 +122,7 @@ HRESULT ProgramValueEnv::StartProgram()
 
     for ( ; ; )
     {
-        BPCookie    cookie = 0;
-
-        hr = exec->WaitForDebug( INFINITE );
+        hr = exec->WaitForEvent( INFINITE );
         if ( FAILED( hr ) )
             return hr;
 
@@ -147,27 +130,30 @@ HRESULT ProgramValueEnv::StartProgram()
         if ( FAILED( hr ) )
             return hr;
 
-        if ( !loaded && callback->GetLoadCompleted() )
+        if ( proc->IsStopped() )
         {
-            loaded = true;
+            if ( !loaded && callback->GetLoadCompleted() )
+            {
+                loaded = true;
 
-            procMod = callback->GetProcessModule();
-            Address         va = procMod->GetImageBase() + mStopRva;
+                procMod = callback->GetProcessModule();
+                Address         va = procMod->GetImageBase() + mStopRva;
 
-            hr = exec->SetBreakpoint( proc, va, Cookie );
+                hr = exec->SetBreakpoint( proc, va );
+                if ( FAILED( hr ) )
+                    return hr;
+            }
+
+            if ( callback->TakeBPHit() )
+            {
+                mThreadId = callback->GetLastThreadId();
+                break;
+            }
+
+            hr = exec->Continue( proc, false );
             if ( FAILED( hr ) )
                 return hr;
         }
-
-        if ( callback->TakeBPHit( cookie ) && (cookie == Cookie) )
-        {
-            mThreadId = callback->GetLastThreadId();
-            break;
-        }
-
-        hr = exec->ContinueDebug( false );
-        if ( FAILED( hr ) )
-            return hr;
     }
 
     // the process is now where we want it, so load its symbols
@@ -187,7 +173,7 @@ HRESULT ProgramValueEnv::FindObject( const wchar_t* name, MagoEE::Declaration*& 
 {
     HRESULT hr = S_OK;
     int     nzChars = 0;
-    scoped_array<char>  nameChars;
+    UniquePtr<char[]>  nameChars;
     SymHandle   childSH;
     DWORD   flags = 0;
 
@@ -201,23 +187,26 @@ HRESULT ProgramValueEnv::FindObject( const wchar_t* name, MagoEE::Declaration*& 
     if ( nzChars == 0 )
         return HRESULT_FROM_WIN32( GetLastError() );
 
-    nameChars.reset( new char[ nzChars ] );
-    if ( nameChars.get() == NULL )
+    nameChars.Attach( new char[ nzChars ] );
+    if ( nameChars.Get() == NULL )
         return E_OUTOFMEMORY;
 
-    nzChars = WideCharToMultiByte( CP_UTF8, flags, name, -1, nameChars.get(), nzChars, NULL, NULL );
+    nzChars = WideCharToMultiByte( CP_UTF8, flags, name, -1, nameChars.Get(), nzChars, NULL, NULL );
     if ( nzChars == 0 )
         return HRESULT_FROM_WIN32( GetLastError() );
 
-    // take away one for the terminator
-    hr = mSymSession->FindChildSymbol( mBlockSH, nameChars.get(), nzChars-1, childSH );
+    hr = E_FAIL;
+    for ( auto it = mBlockSH.rbegin(); hr != S_OK && it != mBlockSH.rend(); it++)
+        // take away one for the terminator
+        hr = mSymSession->FindChildSymbol( *it, nameChars.Get(), nzChars-1, childSH );
+
     if ( hr != S_OK )
     {
         EnumNamedSymbolsData    enumData = { 0 };
 
         for ( int i = 0; i < SymHeap_Count; i++ )
         {
-            hr = mSymSession->FindFirstSymbol( (SymbolHeapId) i, nameChars.get(), nzChars-1, enumData );
+            hr = mSymSession->FindFirstSymbol( (SymbolHeapId) i, nameChars.Get(), nzChars-1, enumData );
             if ( hr == S_OK )
                 break;
         }
@@ -276,7 +265,7 @@ void ConvertVariantToDataVal( const Variant& var, MagoEE::DataValue& dataVal )
     }
 }
 
-boost::shared_ptr<DataObj> ProgramValueEnv::GetValue( MagoEE::Declaration* decl )
+std::shared_ptr<DataObj> ProgramValueEnv::GetValue( MagoEE::Declaration* decl )
 {
     _ASSERT( decl != NULL );
 
@@ -284,7 +273,7 @@ boost::shared_ptr<DataObj> ProgramValueEnv::GetValue( MagoEE::Declaration* decl 
     DiaDecl*                    diaDecl = (DiaDecl*) decl;
     ISymbolInfo*                sym = diaDecl->GetSymbol();
     LocationType                loc = LocIsNull;
-    boost::shared_ptr<DataObj>  val;
+    std::shared_ptr<DataObj>  val;
     MagoEE::DataValueKind       valKind = MagoEE::DataValueKind_None;
     MagoEE::DataValue           dataVal = { 0 };
     RefPtr<Type>                type;
@@ -404,8 +393,8 @@ boost::shared_ptr<DataObj> ProgramValueEnv::GetValue( MagoEE::Declaration* decl 
 
             tlsPtrAddr = tebAddr + offsetof( TEB32, ThreadLocalStoragePointer );
 
-            SIZE_T  lenRead = 0;
-            SIZE_T  lenUnreadable = 0;
+            uint32_t    lenRead = 0;
+            uint32_t    lenUnreadable = 0;
 
             hr = mExec->ReadMemory( mProc, tlsPtrAddr, 4, lenRead, lenUnreadable, (uint8_t*) &tlsArrayAddr );
             if ( FAILED( hr ) )
@@ -439,22 +428,22 @@ boost::shared_ptr<DataObj> ProgramValueEnv::GetValue( MagoEE::Declaration* decl 
     return val;
 }
 
-boost::shared_ptr<DataObj> ProgramValueEnv::GetValue( MagoEE::Address address, MagoEE::Type* type )
+std::shared_ptr<DataObj> ProgramValueEnv::GetValue( MagoEE::Address address, MagoEE::Type* type )
 {
     return GetValue( address, type, NULL );
 }
 
-boost::shared_ptr<DataObj> ProgramValueEnv::GetValue( MagoEE::Address address, Type* type, MagoEE::Declaration* decl )
+std::shared_ptr<DataObj> ProgramValueEnv::GetValue( MagoEE::Address address, Type* type, MagoEE::Declaration* decl )
 {
     HRESULT hr = S_OK;
-    boost::shared_ptr<DataObj> val( new LValueObj( decl, address ) );
+    std::shared_ptr<DataObj> val( new LValueObj( decl, address ) );
 
     val->SetType( type );
 
     uint8_t     targetBuf[ sizeof( MagoEE::DataValue ) ] = { 0 };
     size_t      targetSize = type->GetSize();
-    SIZE_T      lenRead = 0;
-    SIZE_T      lenUnreadable = 0;
+    uint32_t    lenRead = 0;
+    uint32_t    lenUnreadable = 0;
 
     hr = mExec->ReadMemory( mProc, (Address) address, targetSize, lenRead, lenUnreadable, targetBuf );
     if ( FAILED( hr ) )
@@ -513,7 +502,10 @@ RefPtr<MagoEE::Declaration> ProgramValueEnv::GetThis()
     SymHandle   childSH;
     RefPtr<MagoEE::Declaration> decl;
 
-    hr = mSymSession->FindChildSymbol( mBlockSH, "this", 4, childSH );
+    hr = E_FAIL;
+    for ( auto it = mBlockSH.rbegin(); hr != S_OK && it != mBlockSH.rend(); it++)
+        // take away one for the terminator
+        hr = mSymSession->FindChildSymbol( *it, "this", 4, childSH );
     if ( hr != S_OK )
         return NULL;
 
@@ -541,7 +533,7 @@ HRESULT ProgramValueEnv::LoadSymbols( DWORD64 loadAddr )
     RefPtr<IDataSource>     dataSource;
     RefPtr<ISession>        session;
     SymHandle               funcSym = { 0 };
-    SymHandle               blockSym = { 0 };
+    std::vector<SymHandle>  blockSym;
     SymInfoData             infoData = { 0 };
     ISymbolInfo*            symInfo = NULL;
 
@@ -582,7 +574,7 @@ HRESULT ProgramValueEnv::LoadSymbols( DWORD64 loadAddr )
     return S_OK;
 }
 
-HRESULT ProgramValueEnv::FindSymbolByRVA( DWORD rva, MagoST::SymHandle& handle, MagoST::SymHandle& innermostChild )
+HRESULT ProgramValueEnv::FindSymbolByRVA( DWORD rva, MagoST::SymHandle& handle, std::vector<MagoST::SymHandle>& innermostChild )
 {
     HRESULT     hr = S_OK;
     uint16_t    sec = 0;
@@ -598,7 +590,10 @@ HRESULT ProgramValueEnv::FindSymbolByRVA( DWORD rva, MagoST::SymHandle& handle, 
 
     hr = mSymSession->FindInnermostSymbol( handle, sec, offset, innermostChild );
     if ( hr != S_OK )
-        innermostChild = handle;
+    {
+        innermostChild.resize( 1 );
+        innermostChild[0] = handle;
+    }
 
     return S_OK;
 }
@@ -1291,7 +1286,9 @@ HRESULT ProgramValueEnv::GetRegValue( DWORD reg, MagoEE::DataValueKind& kind, Ma
     case CV_REG_STAT:   value.UInt64Value = context.FloatSave.StatusWord;   kind = MagoEE::DataValueKind_UInt64;  break;
     case CV_REG_TAG:    value.UInt64Value = context.FloatSave.TagWord;      kind = MagoEE::DataValueKind_UInt64;  break;
     case CV_REG_FPIP:   value.UInt64Value = 0;             kind = MagoEE::DataValueKind_UInt64;  break;
+#if _WIN64
     case CV_REG_FPCS:   value.UInt64Value = context.FloatSave.Cr0NpxState;  kind = MagoEE::DataValueKind_UInt64;  break;
+#endif
     case CV_REG_FPDO:   value.UInt64Value = context.FloatSave.DataOffset;   kind = MagoEE::DataValueKind_UInt64;  break;
     case CV_REG_FPDS:   value.UInt64Value = context.FloatSave.DataSelector; kind = MagoEE::DataValueKind_UInt64;  break;
     case CV_REG_ISEM:   value.UInt64Value = 0;             kind = MagoEE::DataValueKind_UInt64;  break;

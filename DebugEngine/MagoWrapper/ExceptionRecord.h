@@ -1,5 +1,16 @@
 #pragma once
 
+
+//#include "..\Exec\Types.h"
+//#include "..\Exec\IProcess.h"
+
+#include "..\..\CVSym\CVSym\CVSymPublic.h"
+
+#include "..\MagoNatDE\Utility.h"
+#include "..\MagoNatDE\DRuntime.h"
+
+//#include "DRuntime.h"
+
 using namespace System;
 
 namespace MagoWrapper{
@@ -33,11 +44,12 @@ namespace MagoWrapper{
 			ExceptionRecord^ get();
 		}
 	internal:
-		ExceptionRecord(IProcess* process, const EXCEPTION_RECORD* exceptionRec);
+		ExceptionRecord(Mago::DRuntime* druntime, const EXCEPTION_RECORD64* exceptionRec);
 
 	private:
-		IProcess* mProcess;
-		const EXCEPTION_RECORD* mExceptionRecord;
+		//IProcess* mProcess;
+		Mago::DRuntime* mDRuntime;
+		const EXCEPTION_RECORD64* mExceptionRecord;
 		ExceptionRecord^ mInnerExceptionRecord;
 	};
 	

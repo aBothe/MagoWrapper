@@ -65,7 +65,7 @@ namespace MagoST
         virtual HRESULT FindOuterSymbolByAddr( SymbolHeapId heapId, WORD segment, DWORD offset, SymHandle& handle );
         virtual HRESULT FindOuterSymbolByRVA( SymbolHeapId heapId, DWORD rva, SymHandle& handle );
         virtual HRESULT FindOuterSymbolByVA( SymbolHeapId heapId, DWORD64 va, SymHandle& handle );
-        virtual HRESULT FindInnermostSymbol( SymHandle parentHandle, WORD segment, DWORD offset, SymHandle& handle );
+        virtual HRESULT FindInnermostSymbol( SymHandle parentHandle, WORD segment, DWORD offset, std::vector<SymHandle>& handles );
 
         virtual HRESULT SetChildSymbolScope( SymHandle handle, SymbolScope& scope );
 
@@ -102,10 +102,7 @@ namespace MagoST
         virtual bool FindLineByNum( uint16_t compIndex, uint16_t fileIndex, uint16_t line, LineNumber& lineNumber );
         virtual bool FindNextLineByNum( uint16_t compIndex, uint16_t fileIndex, uint16_t line, LineNumber& lineNumber );
 
-    private:
-        void SetLineNumberFromSegment( uint16_t compIx, uint16_t fileIx, const FileSegmentInfo& segInfo, uint16_t lineIndex, LineNumber& lineNumber );
-
-        template <class TElem>
-        bool BinarySearch( TElem targetKey, TElem* array, int arrayLen, int& indexFound );
+        virtual bool FindLines( bool exactMatch, const char* fileName, size_t fileNameLen, uint16_t reqLineStart, uint16_t reqLineEnd, 
+                                std::list<LineNumber>& lines );
     };
 }

@@ -10,7 +10,6 @@
 #include "DataValue.h"
 #include "DataElement.h"
 
-using namespace boost;
 using MagoEE::Type;
 using MagoEE::Declaration;
 
@@ -19,26 +18,26 @@ DataEnv::DataEnv( size_t size )
 :   mBufSize( size ),
     mAllocSize( 4 )
 {
-    mBuf.reset( new uint8_t[size] );
+    mBuf.Attach( new uint8_t[size] );
 }
 
 DataEnv::DataEnv( const DataEnv& orig )
 {
-    mBuf.reset( new uint8_t[ orig.mAllocSize ] );
+    mBuf.Attach( new uint8_t[ orig.mAllocSize ] );
     mBufSize = orig.mAllocSize;
     mAllocSize = orig.mAllocSize;
 
-    memcpy( mBuf.get(), orig.mBuf.get(), mBufSize );
+    memcpy( mBuf.Get(), orig.mBuf.Get(), mBufSize );
 }
 
 uint8_t*    DataEnv::GetBuffer()
 {
-    return mBuf.get();
+    return mBuf.Get();
 }
 
 uint8_t*    DataEnv::GetBufferLimit()
 {
-    return mBuf.get() + mAllocSize;
+    return mBuf.Get() + mAllocSize;
 }
 
 MagoEE::Address DataEnv::Allocate( uint32_t size )
@@ -52,7 +51,7 @@ MagoEE::Address DataEnv::Allocate( uint32_t size )
     return addr;
 }
 
-boost::shared_ptr<DataObj> DataEnv::GetValue( MagoEE::Declaration* decl )
+std::shared_ptr<DataObj> DataEnv::GetValue( MagoEE::Declaration* decl )
 {
     if ( decl->IsConstant() )
     {
@@ -72,16 +71,16 @@ boost::shared_ptr<DataObj> DataEnv::GetValue( MagoEE::Declaration* decl )
     throw L"Can't get value.";
 }
 
-boost::shared_ptr<DataObj> DataEnv::GetValue( MagoEE::Address address, MagoEE::Type* type )
+std::shared_ptr<DataObj> DataEnv::GetValue( MagoEE::Address address, MagoEE::Type* type )
 {
     return GetValue( address, type, NULL );
 }
 
-boost::shared_ptr<DataObj> DataEnv::GetValue( MagoEE::Address address, MagoEE::Type* type, MagoEE::Declaration* decl )
+std::shared_ptr<DataObj> DataEnv::GetValue( MagoEE::Address address, MagoEE::Type* type, MagoEE::Declaration* decl )
 {
     _ASSERT( type != NULL );
 
-    shared_ptr<LValueObj>   val( new LValueObj( decl, address ) );
+    std::shared_ptr<LValueObj>   val( new LValueObj( decl, address ) );
     size_t  size = 0;
 
     if ( type->IsPointer() 
@@ -97,7 +96,7 @@ boost::shared_ptr<DataObj> DataEnv::GetValue( MagoEE::Address address, MagoEE::T
 
     if ( type->IsPointer() )
     {
-        memcpy( &val->Value.Addr, mBuf.get() + address, size );
+        memcpy( &val->Value.Addr, mBuf.Get() + address, size );
     }
     else if ( type->IsIntegral() )
     {
@@ -118,7 +117,7 @@ boost::shared_ptr<DataObj> DataEnv::GetValue( MagoEE::Address address, MagoEE::T
         const size_t AddressSize = type->AsTypeDArray()->GetPointerType()->GetSize();
 
         val->Value.Array.Length = (MagoEE::dlength_t) ReadInt( address, LengthSize, false );
-        memcpy( &val->Value.Array.Addr, mBuf.get() + address + LengthSize, AddressSize );
+        memcpy( &val->Value.Array.Addr, mBuf.Get() + address + LengthSize, AddressSize );
     }
 
     return val;
@@ -129,8 +128,8 @@ void DataEnv::SetValue( MagoEE::Address address, DataObj* val )
     _ASSERT( val->GetType() != NULL );
 
     Type*       type = val->GetType();
-    uint8_t*    buf = mBuf.get() + address;
-    uint8_t*    bufLimit = mBuf.get() + mBufSize;
+    uint8_t*    buf = mBuf.Get() + address;
+    uint8_t*    bufLimit = mBuf.Get() + mBufSize;
 
     if ( type->IsPointer() )
     {
@@ -179,7 +178,7 @@ bool DataEnv::GetArrayLength( MagoEE::dlength_t& length )
 
 uint64_t DataEnv::ReadInt( MagoEE::Address address, size_t size, bool isSigned )
 {
-    return ReadInt( mBuf.get(), address, size, isSigned );
+    return ReadInt( mBuf.Get(), address, size, isSigned );
 }
 
 uint64_t DataEnv::ReadInt( uint8_t* srcBuf, MagoEE::Address address, size_t size, bool isSigned )
@@ -229,7 +228,7 @@ uint64_t DataEnv::ReadInt( uint8_t* srcBuf, MagoEE::Address address, size_t size
 
 Real10 DataEnv::ReadFloat( MagoEE::Address address, MagoEE::Type* type )
 {
-    return ReadFloat( mBuf.get(), address, type );
+    return ReadFloat( mBuf.Get(), address, type );
 }
 
 Real10 DataEnv::ReadFloat( uint8_t* srcBuf, MagoEE::Address address, MagoEE::Type* type )
@@ -324,7 +323,7 @@ HRESULT DataEnvBinder::GetReturnType( MagoEE::Type*& type )
 
 HRESULT DataEnvBinder::GetValue( MagoEE::Declaration* decl, MagoEE::DataValue& value )
 {
-    shared_ptr<DataObj> val = mDataEnv->GetValue( decl );
+    std::shared_ptr<DataObj> val = mDataEnv->GetValue( decl );
 
     if ( val == NULL )
         throw L"No value.";
@@ -335,7 +334,7 @@ HRESULT DataEnvBinder::GetValue( MagoEE::Declaration* decl, MagoEE::DataValue& v
 
 HRESULT DataEnvBinder::GetValue( MagoEE::Address addr, MagoEE::Type* type, MagoEE::DataValue& value )
 {
-    shared_ptr<DataObj> val = mDataEnv->GetValue( addr, type );
+    std::shared_ptr<DataObj> val = mDataEnv->GetValue( addr, type );
 
     if ( val == NULL )
         throw L"No value.";

@@ -2,6 +2,27 @@
 #include "Debuggee.h"
 #include "DebuggerCallback.h"
 
+#include "..\..\CVSym\CVSym\Error.h"
+//#include "..\..\CVSym\CVSym\CVSymPublic.h"
+
+//#include "..\Exec\Utility.h"
+
+//#include "..\Exec\IProcess.h"
+//#include "..\Exec\Process.h"
+//#include "..\Exec\Machine.h"
+
+#include "..\..\CVSym\CVSTI\CVSTI.h"
+
+#include "..\UnitTests\utestExec\Utility.h"
+
+#include "..\MagoNatDE\Utility.h"
+#include "..\MagoNatDE\Thread.h"
+//#include "..\MagoNatDE\ICoreProcess.h"
+#include "..\MagoNatDE\LocalProcess.h"
+#include "..\MagoNatDE\ArchData.h"
+#include "..\MagoNatDE\EnumFrameInfo.h"
+#include "..\MagoNatDE\Program.h"
+
 using namespace System::Collections::Generic;
 
 namespace MagoWrapper{
@@ -11,16 +32,18 @@ namespace MagoWrapper{
 		mModuleIdCounter = 0;
 
 		mDebugger = NULL;
-		mModules = new ModuleMap();
-		mEventCallback = new DebuggerCallback(this);
+		mThreadGuard = new Guard();
 
+		mEventCallback = new DebuggerCallback(this);
 	}
 
 	Debuggee::~Debuggee()
 	{
-		delete mModules;
+		if (mDruntime)
+			delete mDruntime;
 		delete mDebugger;
 		delete mEventCallback;
+		delete mThreadGuard;
 	}
 
 	void Debuggee::Terminate()
@@ -30,235 +53,275 @@ namespace MagoWrapper{
 
 	void Debuggee::Resume()
 	{
-		mDebugger->ResumeProcess(mProcess);
+		HRESULT hr = mDebugger->ResumeLaunchedProcess(mProcess);
 	}
 
 	void Debuggee::Suspend()
 	{
-		mDebugger->AsyncBreak(mProcess);
+		HRESULT hr = mDebugger->AsyncBreak(mProcess);
 	}
 
 	void Debuggee::Continue()
 	{
-		mDebugger->Continue(mProcess, true);
+		HRESULT hr = mDebugger->Continue(mProcess, true);
 	}
 
 	void Debuggee::StepIn()
 	{
-		mDebugger->StepInstruction(mProcess, true, true, true);
+		HRESULT hr = mDebugger->StepInstruction(mProcess, true, true);
 	}
 
 	void Debuggee::StepOut()
 	{
-
-		List<CallStackFrame^>^ callStack = GetCallStack(StoppedThreadId);
-		int count = callStack->Count;
-		if (count < 2)
+		RefPtr<Mago::Thread> thread;
+		HRESULT hr = mProg->FindThread(StoppedThreadId, thread);
+		if (FAILED(hr))
 			return;
 
-		Address address = callStack[1]->InstructionPointer;
-
-		mDebugger->StepOut(mProcess, address, true);
+		hr = thread->Step(mProcess, STEP_OUT, 0, true);
 	}
 
 	void Debuggee::StepOver()
 	{
+		Mago::Address64 address = GetCurrentInstructionAddress();
+		if (address == 0)
+			return;
+		RefPtr<Mago::Module> mod;
+		HRESULT hr = mProg->FindModuleContainingAddress(address, mod);
+		if (FAILED(hr))
+			return;
 
-		for ( ModuleMap::iterator it = mModules->begin();
-			it != mModules->end();
-			it++ )
-		{
-			RefPtr<Mago::Module> mod =  it->second;
+		RefPtr<MagoST::ISession>    session;
+		MagoST::LineNumber      line;
 
-			Address address = GetCurrentInstructionAddress();
-			if (address == 0)
-				return;
+		if ( !mod->GetSymbolSession( session ) )
+			return;
 
-			if (!mod->Contains(address))
-				continue;
+		uint16_t    sec = 0;
+		uint32_t    offset = 0;
+		sec = session->GetSecOffsetFromVA( address, offset );
+		if ( sec == 0 )
+			return;
 
-			HRESULT hr = S_OK;
-			RefPtr<MagoST::ISession>    session;
-			AddressRange            addrRanges[1] = { 0 };
-			MagoST::LineNumber      line;
+		if ( !session->FindLine( sec, offset, line ) )
+			return;
 
-			if ( !mod->GetSymbolSession( session ) )
-				return;
+		UINT64  addrBegin = 0;
+		DWORD   len = 0;
 
-			uint16_t    sec = 0;
-			uint32_t    offset = 0;
-			sec = session->GetSecOffsetFromVA( address, offset );
-			if ( sec == 0 )
-				return;
+		addrBegin = session->GetVAFromSecOffset( sec, line.Offset );
+		len = line.Length;
 
-			if ( !session->FindLine( sec, offset, line ) )
-				return;
+		Mago::AddressRange64            addrRange = { 0 };
+		addrRange.Begin = (Address) addrBegin;
+		addrRange.End = (Address) (addrBegin + len - 1);
 
-			UINT64  addrBegin = 0;
-			DWORD   len = 0;
-
-			addrBegin = session->GetVAFromSecOffset( sec, line.Offset );
-			len = line.Length;
-
-			addrRanges[0].Begin = (Address) addrBegin;
-			addrRanges[0].End = (Address) (addrBegin + len - 1);
-
-			hr = mDebugger->StepRange( mProcess, false, true, addrRanges, 1, true );
-
-			break;
-		}
+		hr = mDebugger->StepRange(mProcess, false, addrRange, true);
 	}
 
-	void Debuggee::SetBreakPoint(ULONG64 address, ULONG64 cookie)
+	void Debuggee::SetBreakPoint(ULONG64 address)
 	{		
-		mDebugger->SetBreakpoint(mProcess, address, cookie);
+		HRESULT hr = mDebugger->SetBreakpoint(mProcess, address);
 	}
 
-	void Debuggee::RemoveBreakPoint(ULONG64 address, ULONG64 cookie)
+	void Debuggee::RemoveBreakPoint(ULONG64 address)
 	{
-		mDebugger->RemoveBreakpoint(mProcess, address, cookie);
+		HRESULT hr = mDebugger->RemoveBreakpoint(mProcess, address);
 	}
 
-	void Debuggee::OnInternalProcessStart(IProcess* process)
+	void Debuggee::OnInternalProcessStart(DWORD uniquePid)
 	{
-		SetCoreProcess(process);
-		
 		OnProcessStart();
 	}
 
-	void Debuggee::OnInternalProcessExit(IProcess* process, DWORD exitCode)
+	void Debuggee::OnInternalProcessExit(DWORD uniquePid, DWORD exitCode)
 	{
 		OnProcessExit(exitCode);
 	}
 
-	void Debuggee::OnInternalThreadStart(IProcess* process, Thread* thread)
+	void Debuggee::OnInternalThreadStart(DWORD uniquePid, Mago::ICoreThread* thread)
 	{
-		OnThreadStart(thread);
+		CComModule _Module;
+		//create mago thread
+		RefPtr<Mago::Thread> magothread;
+		HRESULT hr = S_OK;
+		
+		hr = mProg->CreateThread(thread, magothread);
+		if (FAILED(hr))
+			return;
+
+		hr = mProg->AddThread(magothread.Get());
+		if (FAILED(hr))
+			return;
+
+		//call managed event
+		OnThreadStart(thread->GetTid());
+
+		magothread.Detach();
 	}
 
-	void Debuggee::OnInternalThreadExit(IProcess* process, DWORD threadId, DWORD exitCode)
+	void Debuggee::OnInternalThreadExit(DWORD uniquePid, DWORD threadId, DWORD exitCode)
 	{
 		OnThreadExit(threadId, exitCode);
+
+		RefPtr<Mago::Thread> thread;
+		HRESULT hr = mProg->FindThread(threadId, thread);
+		if (FAILED(hr))
+			return;
+
+		mProg->DeleteThread(thread);
 	}
 
-	void Debuggee::OnInternalModuleLoad(IProcess* process, IModule* module)
+	void Debuggee::OnInternalModuleLoad(DWORD uniquePid, Mago::ICoreModule* module)
 	{
 		OnModuleLoad(module);
 		
+		CComModule _Module;
 		RefPtr<Mago::Module> mod;
-
         HRESULT hr = S_OK;
 
-		hr = MakeCComObject( mod );
-        if ( FAILED( hr ) )
-            return;
-
 		mModuleIdCounter++;
-		mod->SetId(mModuleIdCounter);
-		mod->SetCoreModule(module);
+		hr = mProg->CreateModuleInternal(module, mod, mModuleIdCounter);
+		if (FAILED(hr))
+			return;
 
-		mModules->insert( ModuleMap::value_type( module->GetImageBase(),  mod ) );
+		hr = mProg->AddModule(mod.Get());
+		if (FAILED(hr))
+			return;
 
-        hr = mod->LoadSymbols( false );
+		hr = mod->LoadSymbols(false);
+		mod.Detach();
  	}
 
-	void Debuggee::OnInternalModuleUnload(IProcess* process, Address baseAddr)
+	void Debuggee::OnInternalModuleUnload(DWORD uniquePid, Mago::Address64 baseAddr)
 	{		
 		OnModuleUnload(baseAddr);
-        ModuleMap::iterator it = mModules->find( baseAddr );
 
-        if ( it != mModules->end() )
-        {
-            mModules->erase( it );
-        }
+		RefPtr<Mago::Module> mod;
+		bool found = mProg->FindModule(baseAddr, mod);
+		if (!found)
+			return;
+
+		mProg->DeleteModule(mod);
 	}
 
-	void Debuggee::OnInternalOutputString(IProcess* process, const wchar_t* outputString)
+	void Debuggee::OnInternalOutputString(DWORD uniquePid, const wchar_t* outputString)
 	{
 		OnOutputString(gcnew String(outputString));
 	}
 
-	void Debuggee::OnInternalLoadComplete(IProcess* process, DWORD threadId)
+	void Debuggee::OnInternalLoadComplete(DWORD uniquePid, DWORD threadId)
 	{
 		OnLoadComplete(threadId);
 	}
 
-	bool Debuggee::OnInternalException(IProcess* process, DWORD threadId, bool firstChance, const EXCEPTION_RECORD* exceptRec)
+	RunMode Debuggee::OnInternalException(DWORD uniquePid, DWORD threadId, bool firstChance, const EXCEPTION_RECORD64* exceptRec)
 	{
 		SetStoppedThreadId(threadId);
 
-		ExceptionRecord^ rec = gcnew ExceptionRecord(process, exceptRec);
+		ExceptionRecord^ rec = gcnew ExceptionRecord(mDruntime, exceptRec);
 
-		return OnException(threadId, firstChance, rec);
+		return (RunMode)OnException(threadId, firstChance, rec);
 	}
 
-	bool Debuggee::OnInternalBreakpoint(IProcess* process, uint32_t threadId, Address address, Enumerator<BPCookie>* iter)
+	RunMode Debuggee::OnInternalBreakpoint(DWORD uniquePid, uint32_t threadId, Mago::Address64 address, bool embedded)
 	{
 		SetStoppedThreadId(threadId);
 
-		return OnBreakpoint(threadId, address);
+		return (RunMode)OnBreakpoint(threadId, address);
 	}
 
-	void Debuggee::OnInternalStepComplete(IProcess* process, uint32_t threadId)
+	void Debuggee::OnInternalStepComplete(DWORD uniquePid, uint32_t threadId)
 	{
 		SetStoppedThreadId(threadId);
 
 		OnStepComplete(threadId);
 	}
 
-	void Debuggee::OnInternalAsyncBreakComplete(IProcess* process, uint32_t threadId)
+	void Debuggee::OnInternalAsyncBreakComplete(DWORD uniquePid, uint32_t threadId)
 	{
 		SetStoppedThreadId(threadId);
 
 		OnAsyncBreakComplete(threadId);
 	}
 
-	void Debuggee::OnInternalError(IProcess* process, HRESULT hrErr, uint32_t event)
+	void Debuggee::OnInternalError(DWORD uniquePid, HRESULT hrErr, IEventCallback::EventCode event)
 	{
 		OnError(hrErr, event);
 	}
 
-	bool Debuggee::InternalCanStepInFunction(IProcess* process, Address address)
+	ProbeRunMode Debuggee::OnInternalCallProbe(DWORD uniquePid, uint32_t threadId, Mago::Address64 address, Mago::AddressRange64& thunkRange)
 	{
-		return CanStepInFunction(address);
+		return OnInternalCallProbe(uniquePid, threadId, address, thunkRange);
 	}
 
 	uint32_t Debuggee::GetProcessId()
 	{
-		return mProcess->GetId();
+		//return mProcess->GetId();
+		return mProcess->GetPid();
 	}
 
 	List<CallStackFrame^>^ Debuggee::GetCallStack(uint32_t threadId)
 	{
+		CComModule _Module;
 		List<CallStackFrame^>^ frames = gcnew List<CallStackFrame^>();
 
-		Enumerator<Thread*>*    threads = NULL;
+		RefPtr<Mago::Thread> thread;
+		HRESULT hr = mProg->FindThread(threadId, thread);
+		if (FAILED(hr))
+			return frames;
 
-		mProcess->EnumThreads( threads );
+		FRAMEINFO_FLAGS flags =
+			FIF_DEBUGINFO
+			| FIF_FUNCNAME
+			| FIF_RETURNTYPE
+			| FIF_ARGS
+			| FIF_LANGUAGE
+			| FIF_MODULE
+			| FIF_FUNCNAME_MODULE
+			| FIF_FUNCNAME_ARGS_ALL
+			| FIF_FUNCNAME_LINES
+			| FIF_FUNCNAME_OFFSET
+			| FIF_FUNCNAME_ARGS_TYPES
+			| FIF_FUNCNAME_ARGS_NAMES
+			| FIF_FUNCNAME_ARGS_VALUES;
 
-		while ( threads->MoveNext() )
+
+		DWORD tid = NULL;
+		thread->GetThreadId(&tid);
+
+		Mago::Thread::Callstack callstack;
+		thread->BuildCallstack(callstack);
+
+		Mago::FrameInfoArray  array(callstack.size());
+		int i = 0;
+		for (Mago::Thread::Callstack::const_iterator it = callstack.begin();
+			it != callstack.end();
+			it++, i++)
 		{
-			Thread* t = threads->GetCurrent();
-			std::list<FrameX86>  stack;
+			
+			HRESULT hr = (*it)->GetInfo(flags, 10, &array[i]);
+			if (FAILED(hr))
+				continue;
+			CallStackFrame^ frame = gcnew CallStackFrame();
+			//frame->InstructionPointer = it->Eip;
+			//frame->BasePointer = it->Ebp;
+			//frames->Add(frame);
 
-			if (t->GetId() == threadId) 
-			{
-				ReadCallstackX86(mProcess->GetHandle(), t->GetHandle(), stack );
+			FRAMEINFO* fi = &array[i];
+			
 
-				for ( std::list<FrameX86>::iterator it = stack.begin();
-					it != stack.end();
-					it++ )
-				{
-					CallStackFrame^ frame = gcnew CallStackFrame();
-					frame->InstructionPointer = it->Eip;
-					frame->BasePointer = it->Ebp;
-					frames->Add(frame);
-				}
-			}
+			frame->AddressMin = fi->m_addrMin;
+			frame->AddressMax = fi->m_addrMax;
+			frame->FunctionName = gcnew String(fi->m_bstrFuncName);
+			frame->Args = gcnew String(fi->m_bstrArgs);
+			frame->ReturnType = gcnew String(fi->m_bstrReturnType);
+			frame->Language = gcnew String(fi->m_bstrLanguage);
+			frame->InstructionPointer = (*it)->GetEip();
+			frames->Add(frame);
 		}
 
-		threads->Release();
-
+		array.Detach();
 		return frames;
 	}
 
@@ -266,33 +329,78 @@ namespace MagoWrapper{
 	{
 		List<DebuggeeThread^>^ result = gcnew List<DebuggeeThread^>();
 
-		Enumerator<Thread*>*    threads = NULL;
+		IEnumDebugThreads2* edthread = NULL;
+		HRESULT hr = mProg->EnumThreads(&edthread);
+		if (FAILED(hr))
+			return result;
 
-		mProcess->EnumThreads( threads );
+		ULONG cnt = 0;
+		hr = edthread->GetCount(&cnt);
+		if (FAILED(hr))
+			return result;
 
-		while ( threads->MoveNext() )
+		ULONG fetched = 0;
+		IDebugThread2** idbThreadArray = new IDebugThread2*[cnt];
+		while (fetched < cnt) 
 		{
-			Thread* t = threads->GetCurrent();
-			DebuggeeThread^ dthread = gcnew DebuggeeThread(t->GetId());
+			ULONG ft = 0;
+			hr = edthread->Next(cnt - fetched, &(idbThreadArray[fetched]), &ft);
+			if (FAILED(hr))
+			{
+				delete[] idbThreadArray;
+				return result;
+			}
+			fetched += ft;
+		}
+
+
+		for (ULONG i = 0; i < fetched;  i++)
+		{
+			DWORD threadId = 0;
+			hr = idbThreadArray[i]->GetThreadId(&threadId);
+			if (FAILED(hr))
+				continue;
+
+			DebuggeeThread^ dthread = gcnew DebuggeeThread(threadId);
 			result->Add(dthread);
 		}
 
-		threads->Release();
-
+		delete[] idbThreadArray;
 		return result;
 	}
 
-	void Debuggee::SetCoreProcess(IProcess* process)
+	void Debuggee::SetProcess(Mago::ICoreProcess* process)
 	{
 		mProcess = process;
+
+		if (mDruntime)
+			delete mDruntime;
+
+		//need to get proper pointer size
+		mDruntime = new Mago::DRuntime(mDebugger, process);
 	}
 
-	void Debuggee::SetDebuggerProxy(DebuggerProxy* debuggerProxy)
+	void Debuggee::SetProgram(Mago::Program* prog)
+	{
+		mProg = prog;
+	}
+
+	Mago::Program* Debuggee::GetProgram()
+	{
+		return mProg;
+	}
+
+	Mago::ICoreProcess* Debuggee::GetProcess()
+	{
+		return mProcess;
+	}
+
+	void Debuggee::SetDebuggerProxy(Mago::DebuggerProxy* debuggerProxy)
 	{
 		mDebugger = debuggerProxy;
 	}
 
-	DebuggerProxy* Debuggee::GetDebuggerProxy()
+	Mago::DebuggerProxy* Debuggee::GetDebuggerProxy()
 	{
 		return mDebugger;
 	}
@@ -316,20 +424,10 @@ namespace MagoWrapper{
 		return stack[0]->InstructionPointer;
 	}
 
-	bool Debuggee::GetStoppedThread(Thread*& thread)
-	{
-		return mProcess->FindThread(mStoppedThreadId, thread);
-	}
 
-	ModuleMap* Debuggee::GetModuleMap()
+	bool Debuggee::GetThread(DWORD threadId, RefPtr<Mago::Thread>& thread)
 	{
-		return mModules;
+		HRESULT hr = mProg->FindThread(threadId, thread);
+		return !FAILED(hr);
 	}
-	
-	IProcess* Debuggee::GetCoreProcess()
-	{
-		return mProcess;
-	}
-
-
 }

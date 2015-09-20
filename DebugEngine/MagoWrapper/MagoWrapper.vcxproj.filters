@@ -27,12 +27,6 @@
     <ClInclude Include="DDebugger.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\UnitTests\utestExec\Utility.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\UnitTests\utestExec\EventCallbackBase.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
     <ClInclude Include="IManagedIEventCallback.h">
       <Filter>Headers</Filter>
     </ClInclude>
@@ -75,12 +69,6 @@
       <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="DDebugger.cpp">
-      <Filter>Sources</Filter>
-    </ClCompile>
-    <ClCompile Include="..\UnitTests\utestExec\Utility.cpp">
-      <Filter>Sources</Filter>
-    </ClCompile>
-    <ClCompile Include="..\UnitTests\utestExec\EventCallbackBase.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="DebuggerCallback.cpp">

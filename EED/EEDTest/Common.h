@@ -28,10 +28,7 @@
 #include <map>
 #include <sstream>
 #include <iostream>
-
-// Boost
-#include <boost/shared_ptr.hpp>
-#include <boost/scoped_array.hpp>
+#include <memory>
 
 // Windows
 #include <windows.h>

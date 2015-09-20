@@ -24,21 +24,6 @@ namespace MagoST
     struct LineInfo;
     struct FileSegmentInfo;
 
-
-    struct LineNumber
-    {
-        uint16_t    CompilandIndex;
-        uint16_t    FileIndex;
-        uint16_t    SegmentInstanceIndex;
-        uint16_t    LineIndex;
-        uint16_t    Number;
-        uint16_t    NumberEnd;
-        uint16_t    Section;
-        uint32_t    Offset;
-        uint32_t    Length;
-    };
-
-
     class ISession
     {
     public:
@@ -78,7 +63,7 @@ namespace MagoST
         virtual HRESULT FindOuterSymbolByAddr( SymbolHeapId heapId, WORD segment, DWORD offset, SymHandle& handle ) = 0;
         virtual HRESULT FindOuterSymbolByRVA( SymbolHeapId heapId, DWORD rva, SymHandle& handle ) = 0;
         virtual HRESULT FindOuterSymbolByVA( SymbolHeapId heapId, DWORD64 va, SymHandle& handle ) = 0;
-        virtual HRESULT FindInnermostSymbol( SymHandle parentHandle, WORD segment, DWORD offset, SymHandle& handle ) = 0;
+        virtual HRESULT FindInnermostSymbol( SymHandle parentHandle, WORD segment, DWORD offset, std::vector<SymHandle>& handle ) = 0;
 
         virtual HRESULT SetChildSymbolScope( SymHandle handle, SymbolScope& scope ) = 0;
 
@@ -114,5 +99,9 @@ namespace MagoST
         virtual bool FindLine( WORD seg, uint32_t offset, LineNumber& lineNumber ) = 0;
         virtual bool FindLineByNum( uint16_t compIndex, uint16_t fileIndex, uint16_t line, LineNumber& lineNumber) = 0;
         virtual bool FindNextLineByNum( uint16_t compIndex, uint16_t fileIndex, uint16_t line, LineNumber& lineNumber ) = 0;
+
+        virtual bool FindLines( bool exactMatch, const char* fileName, size_t fileNameLen, uint16_t reqLineStart, uint16_t reqLineEnd, 
+                                std::list<LineNumber>& lines ) = 0;
+
     };
 }

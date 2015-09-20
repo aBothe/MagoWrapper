@@ -1,14 +1,14 @@
 #include "stdafx.h"
 #include "DebuggerCallback.h"
 
-using namespace boost;
+//using namespace boost;
 
 namespace MagoWrapper
 {
-	DebuggerCallback::DebuggerCallback(IManagedIEventCallback^ managedCallback) : EventCallbackBase()
+	DebuggerCallback::DebuggerCallback(IManagedIEventCallback^ managedCallback)
 	{
 		mManagedCallback = managedCallback;
-		SetCanStepInFunctionReturnValue(true);
+		//SetCanStepInFunctionReturnValue(true);
 	}
 
 	DebuggerCallback::~DebuggerCallback(void)
@@ -16,92 +16,96 @@ namespace MagoWrapper
 		
 	}
 
-	void DebuggerCallback::OnProcessStart(IProcess* process)
+	void DebuggerCallback::AddRef()
 	{
-		EventCallbackBase::OnProcessStart(process);
-		mManagedCallback->OnInternalProcessStart(process);
+		InterlockedIncrement(&mRefCount);
 	}
 
-	void DebuggerCallback::OnProcessExit( IProcess* process, DWORD exitCode )
+	void DebuggerCallback::Release()
 	{
-		EventCallbackBase::OnProcessExit(process, exitCode);
-		mManagedCallback->OnInternalProcessExit(process, exitCode);
+		long    newRef = InterlockedDecrement(&mRefCount);
+		_ASSERT(newRef >= 0);
+		if (newRef == 0)
+		{
+			delete this;
+		}
 	}
 
-	void DebuggerCallback::OnThreadStart( IProcess* process, Thread* thread )
+	void DebuggerCallback::OnProcessStart(DWORD uniquePid)
 	{
-		EventCallbackBase::OnThreadStart(process, thread);
-		mManagedCallback->OnInternalThreadStart(process, thread);
+		mManagedCallback->OnInternalProcessStart(uniquePid);
 	}
 
-	void DebuggerCallback::OnThreadExit( IProcess* process, DWORD threadId, DWORD exitCode )
+	void DebuggerCallback::OnProcessExit(DWORD uniquePid, DWORD exitCode)
 	{
-		EventCallbackBase::OnThreadExit(process, threadId, exitCode);
-		mManagedCallback->OnInternalThreadExit(process, threadId, exitCode);
+		mManagedCallback->OnInternalProcessExit(uniquePid, exitCode);
 	}
 
-	void DebuggerCallback::OnModuleLoad( IProcess* process, IModule* module )
+	void DebuggerCallback::OnThreadStart(DWORD uniquePid, Mago::ICoreThread* thread)
 	{
-		EventCallbackBase::OnModuleLoad(process, module);
-		mManagedCallback->OnInternalModuleLoad(process, module);
+		mManagedCallback->OnInternalThreadStart(uniquePid, thread);
 	}
 
-	void DebuggerCallback::OnModuleUnload( IProcess* process, Address baseAddr )
+	void DebuggerCallback::OnThreadExit(DWORD uniquePid, DWORD threadId, DWORD exitCode)
 	{
-		EventCallbackBase::OnModuleUnload(process, baseAddr);
-		mManagedCallback->OnInternalModuleUnload(process, baseAddr);
+		mManagedCallback->OnInternalThreadExit(uniquePid, threadId, exitCode);
 	}
 
-	void DebuggerCallback::OnOutputString( IProcess* process, const wchar_t* outputString )
+	void DebuggerCallback::OnModuleLoad(DWORD uniquePid, Mago::ICoreModule* module)
 	{
-		EventCallbackBase::OnOutputString(process, outputString);
-		mManagedCallback->OnInternalOutputString(process, outputString);
+		mManagedCallback->OnInternalModuleLoad(uniquePid, module);
 	}
 
-	void DebuggerCallback::OnLoadComplete( IProcess* process, DWORD threadId )
+	void DebuggerCallback::OnModuleUnload(DWORD uniquePid, Mago::Address64 baseAddr)
 	{
-		EventCallbackBase::OnLoadComplete(process, threadId);
-		mManagedCallback->OnInternalLoadComplete(process, threadId);
+		mManagedCallback->OnInternalModuleUnload(uniquePid, baseAddr);
 	}
 
-	bool DebuggerCallback::OnException( IProcess* process, DWORD threadId, bool firstChance, const EXCEPTION_RECORD* exceptRec )
+	void DebuggerCallback::OnOutputString(DWORD uniquePid, const wchar_t* outputString)
 	{
-		bool result = EventCallbackBase::OnException(process, threadId, firstChance, exceptRec);
-		result = mManagedCallback->OnInternalException(process, threadId, firstChance, exceptRec);
-		return result;
+		mManagedCallback->OnInternalOutputString(uniquePid, outputString);
 	}
 
-	bool DebuggerCallback::OnBreakpoint( IProcess* process, uint32_t threadId, Address address, Enumerator<BPCookie>* iter )
+	void DebuggerCallback::OnLoadComplete(DWORD uniquePid, DWORD threadId)
 	{
-		bool reault = EventCallbackBase::OnBreakpoint(process, threadId, address, iter);
-		mManagedCallback->OnInternalBreakpoint(process, threadId, address, iter);
-		return false;
+		mManagedCallback->OnInternalLoadComplete(uniquePid, threadId);
 	}
 
-	void DebuggerCallback::OnStepComplete( IProcess* process, uint32_t threadId )
+	RunMode DebuggerCallback::OnException(DWORD uniquePid, DWORD threadId, bool firstChance, const EXCEPTION_RECORD64*exceptRec)
 	{
-		EventCallbackBase::OnStepComplete(process, threadId);
-		mManagedCallback->OnInternalStepComplete(process, threadId);
+		return mManagedCallback->OnInternalException(uniquePid, threadId, firstChance, exceptRec);
 	}
 
-	void DebuggerCallback::OnAsyncBreakComplete( IProcess* process, uint32_t threadId )
+	RunMode DebuggerCallback::OnBreakpoint(DWORD uniquePid, uint32_t threadId, Mago::Address64 address, bool embedded)
 	{
-		EventCallbackBase::OnAsyncBreakComplete(process, threadId);
-		mManagedCallback->OnInternalStepComplete(process, threadId);
+		return mManagedCallback->OnInternalBreakpoint(uniquePid, threadId, address, embedded);
 	}
 
-	void DebuggerCallback::OnError( IProcess* process, HRESULT hrErr, EventCode event )
+	void DebuggerCallback::OnStepComplete(DWORD uniquePid, uint32_t threadId)
 	{
-		EventCallbackBase::OnError(process, hrErr, event);
-		mManagedCallback->OnInternalError(process, hrErr, event);
+		mManagedCallback->OnInternalStepComplete(uniquePid, threadId);
 	}
 
-	bool DebuggerCallback::CanStepInFunction( IProcess* process, Address address )
+	void DebuggerCallback::OnAsyncBreakComplete(DWORD uniquePid, uint32_t threadId)
 	{
-		bool result = EventCallbackBase::CanStepInFunction(process, address);
-		if (result)
-			mManagedCallback->InternalCanStepInFunction(process, address);
-		return result;
+		mManagedCallback->OnInternalStepComplete(uniquePid, threadId);
 	}
+
+	void DebuggerCallback::OnError(DWORD uniquePid, HRESULT hrErr, IEventCallback::EventCode event)
+	{
+		mManagedCallback->OnInternalError(uniquePid, hrErr, event);
+	}
+
+	ProbeRunMode DebuggerCallback::OnCallProbe(DWORD uniquePid, uint32_t threadId, Mago::Address64 address, Mago::AddressRange64& thunkRange)
+	{
+		return mManagedCallback->OnInternalCallProbe(uniquePid, threadId, address, thunkRange);
+	}
+	//bool DebuggerCallback::CanStepInFunction( IProcess* process, Address address )
+	//{
+	//	bool result = EventCallbackBase::CanStepInFunction(process, address);
+	//	if (result)
+	//		mManagedCallback->InternalCanStepInFunction(process, address);
+	//	return result;
+	//}
 
 }

@@ -10,29 +10,23 @@
 #include <MagoEED.h>
 
 
-struct BB;
-
-
 namespace Mago
 {
     class Thread;
     class IRegisterSet;
-	class DebuggerProxy;
 
 
-    class ATL_NO_VTABLE ExprContext : 
+    class ExprContext : 
         public CComObjectRootEx<CComMultiThreadModel>,
         public IDebugExpressionContext2,
         public MagoEE::IValueBinder
     {
-        Address                         mPC;
+        Address64                       mPC;
         RefPtr<IRegisterSet>            mRegSet;
-		DebuggerProxy*					mDebuggerProxy;
-		RefPtr<::IProcess>				mProcess;
         RefPtr<Module>                  mModule;
-        RefPtr<::Thread>                mThread;
+        RefPtr<Thread>                  mThread;
         MagoST::SymHandle               mFuncSH;
-        MagoST::SymHandle               mBlockSH;
+        std::vector<MagoST::SymHandle>  mBlockSH;
         RefPtr<MagoEE::ITypeEnv>        mTypeEnv;
         RefPtr<MagoEE::NameTable>       mStrTable;
 
@@ -66,6 +60,10 @@ namespace Mago
         virtual HRESULT FindObject( 
             const wchar_t* name, 
             MagoEE::Declaration*& decl );
+        virtual HRESULT FindObjectType( 
+            MagoEE::Declaration* decl,
+            const wchar_t* name, 
+            MagoEE::Type*& type );
 
         virtual HRESULT GetThis( MagoEE::Declaration*& decl );
         virtual HRESULT GetSuper( MagoEE::Declaration*& decl );
@@ -103,13 +101,14 @@ namespace Mago
         //////////////////////////////////////////////////////////// 
         // IMagoSymStore 
 
-        STDMETHOD( GetAddress )( Address& address ) { _ASSERT( false ); return E_NOTIMPL; }
+        STDMETHOD( GetAddress )( Address64& address ) { _ASSERT( false ); return E_NOTIMPL; }
         STDMETHOD( GetSession )( MagoST::ISession*& session );
 
         MagoEE::ITypeEnv* GetTypeEnv();
         MagoEE::NameTable* GetStringTable();
         MagoST::SymHandle GetFunctionSH();
-        MagoST::SymHandle GetBlockSH();
+        const std::vector<MagoST::SymHandle>& GetBlockSH();
+        Address64 GetPC();
 
         HRESULT GetAddress( MagoEE::Declaration* decl, MagoEE::Address& addr );
 
@@ -139,15 +138,15 @@ namespace Mago
             MagoEE::DataObject& resultObj );
 
     public:
-        HRESULT Init(
-			DebuggerProxy* debuggerProxy,
-			IProcess* process,
+        HRESULT Init( 
             Module* module,
-            ::Thread* thread,
+            Thread* thread,
             MagoST::SymHandle funcSH, 
-            MagoST::SymHandle blockSH,
-            Address pc,
+            std::vector<MagoST::SymHandle>& blockSH,
+            Address64 pc,
             IRegisterSet* regSet );
+
+        Thread* GetThread();
 
     private:
         HRESULT FindLocalSymbol( const char* name, size_t nameLen, MagoST::SymHandle& localSH );
@@ -203,47 +202,5 @@ namespace Mago
             MagoEE::Type*& type );
 
         HRESULT GetRegValue( DWORD reg, MagoEE::DataValueKind& kind, MagoEE::DataValue& value );
-
-        HRESULT GetStructHash( 
-            const MagoEE::DataObject& key, 
-            const BB& bb, 
-            // To hash a struct, we need to read the key memory into a buffer.
-            // Return it, because the caller needs it, too.
-            HeapPtr& keyBuf,
-            uint32_t& hash );
-
-        HRESULT GetArrayHash( 
-            const MagoEE::DataObject& key, 
-            // To hash an array, we need to read the key memory into a buffer.
-            // Return it, because the caller needs it, too.
-            HeapPtr& keyBuf,
-            uint32_t& hash );
-
-        bool EqualArray(
-            MagoEE::Type* elemType,
-            uint32_t length,
-            const void* keyBuf, 
-            const void* nodeArrayBuf );
-
-        bool EqualSArray(
-            const MagoEE::DataObject& key, 
-            const void* keyBuf, 
-            const void* nodeArrayBuf );
-
-        bool EqualDArray(
-            const MagoEE::DataObject& key, 
-            const void* keyBuf, 
-            HeapPtr& inout_nodeArrayBuf, 
-            const MagoEE::DataValue& nodeKey );
-
-        bool EqualStruct(
-            const MagoEE::DataObject& key, 
-            const void* keyBuf, 
-            const void* nodeArrayBuf );
-
-        HRESULT GetHash( MagoEE::Type* type, const MagoEE::DataValue& value, uint32_t& hash );
-        HRESULT FromRawValue( const void* srcBuf, MagoEE::Type* type, MagoEE::DataValue& value );
-
-        HRESULT ReadMemory( MagoEE::Address addr, uint32_t sizeToRead, void* buffer );
     };
 }

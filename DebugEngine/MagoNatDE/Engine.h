@@ -12,8 +12,8 @@
 #include "resource.h"       // main symbols
 #include "MagoNatDE_i.h"
 #include "DebuggerProxy.h"
+#include "RemoteDebuggerProxy.h"
 #include "ExceptionTable.h"
-
 
 namespace Mago
 {
@@ -22,16 +22,17 @@ namespace Mago
 
     // Engine
 
-    class ATL_NO_VTABLE Engine :
+    class Engine :
         public CComObjectRootEx<CComMultiThreadModel>,
         public CComCoClass<Engine, &CLSID_MagoNativeEngine>,
-        public IDebugEngine2,
+        public IDebugEngine3,
         public IDebugEngineLaunch2
     {
         typedef std::map< DWORD, RefPtr<Program> >  ProgramMap;
         typedef std::map< DWORD, RefPtr<PendingBreakpoint> >    BPMap;
 
         DebuggerProxy       mDebugger;
+        RefPtr<RemoteDebuggerProxy> mRemoteDebugger;
         bool                mPollThreadStarted;
         bool                mSentEngineCreate;
         ProgramMap          mProgs;
@@ -39,6 +40,8 @@ namespace Mago
         DWORD               mLastBPId;
         DWORD               mLastModId;
         CComPtr<IDebugEventCallback2>   mCallback;
+        Guard               mProgsGuard;
+        Guard               mBindBPGuard;
         Guard               mPendingBPGuard;
         Guard               mExceptionGuard;
         EngineExceptionTable    mExceptionInfos;
@@ -52,6 +55,7 @@ namespace Mago
 
     BEGIN_COM_MAP(Engine)
         COM_INTERFACE_ENTRY(IDebugEngine2)
+        COM_INTERFACE_ENTRY(IDebugEngine3)
         COM_INTERFACE_ENTRY(IDebugEngineLaunch2)
     END_COM_MAP()
 
@@ -83,6 +87,14 @@ namespace Mago
         STDMETHOD( SetRegistryRoot )( LPCOLESTR pszRegistryRoot ); 
         STDMETHOD( SetMetric )( LPCOLESTR pszMetric, VARIANT varValue ); 
         STDMETHOD( CauseBreak )(); 
+
+        //////////////////////////////////////////////////////////// 
+        // IDebugEngine3
+        STDMETHOD( SetSymbolPath )( LPCOLESTR szSymbolSearchPath, LPCOLESTR szSymbolCachePath, LOAD_SYMBOLS_FLAGS Flags );
+        STDMETHOD( LoadSymbols )();
+        STDMETHOD( SetJustMyCodeState )( BOOL fUpdate, DWORD dwModules, JMC_CODE_SPEC *rgJMCSpec);
+        STDMETHOD( SetEngineGuid )( GUID *guidEngine );
+        STDMETHOD( SetAllExceptions )( EXCEPTION_STATE dwState );
 
         //////////////////////////////////////////////////////////// 
         // IDebugEngineLaunch2 
@@ -130,15 +142,29 @@ namespace Mago
         HRESULT BindPendingBPsToModule( Module* mod, Program* prog );
         HRESULT UnbindPendingBPsFromModule( Module* mod, Program* prog );
 
+        void BeginBindBP();
+        void EndBindBP();
+
     private:
         HRESULT EnsurePollThreadRunning();
         void ShutdownIfNeeded();
 
+        HRESULT StartDebuggerProxy( 
+            bool useInProcDebugger,
+            IDebuggerProxy*& debugger );
+        HRESULT StartDebuggerProxyForLaunch( 
+            const wchar_t* pszMachine, 
+            IDebugPort2* pPort, 
+            const wchar_t* pszExe, 
+            const wchar_t* pszOptions, 
+            DWORD dwLaunchFlags,
+            IDebuggerProxy*& debugger );
         HRESULT LaunchSuspendedInternal( 
-           IDebugPort2*          pPort,
-           LaunchInfo&           launchParams,
-           IDebugEventCallback2* pCallback,
-           IDebugProcess2**      ppDebugProcess
+            IDebuggerProxy*       debugger,
+            IDebugPort2*          pPort,
+            LaunchInfo&           launchParams,
+            IDebugEventCallback2* pCallback,
+            IDebugProcess2**      ppDebugProcess
         );
         HRESULT ResumeProcessInternal( IDebugProcess2* pProcess );
 

@@ -128,60 +128,6 @@ HRESULT Utf16To8( const wchar_t* u16Str, size_t u16StrLen, char*& u8Str, size_t&
     return S_OK;
 }
 
-bool ExactFileNameMatch( const char* pathA, size_t pathALen, const char* pathB, size_t pathBLen )
-{
-    if ( pathALen != pathBLen )
-        return false;
-
-    for ( size_t i = 0; i < pathALen; i++ )
-    {
-        if ( ((pathA[i] == '\\') && (pathB[i] == '/'))
-            || ((pathA[i] == '/') && (pathB[i] == '\\')) )
-        {
-            // empty, mixed slash and back slash count as the same character
-        }
-        else if ( tolower( pathA[i] ) != tolower( pathB[i] ) )
-            return false;
-    }
-
-    return true;
-}
-
-bool PartialFileNameMatch( const char* pathA, size_t pathALen, const char* pathB, size_t pathBLen )
-{
-    if ( (pathALen == 0) || (pathBLen == 0) )
-        return false;
-
-    const char* pca = pathA + pathALen;
-    const char* pcb = pathB + pathBLen;
-
-    do
-    {
-        pca--;
-        pcb--;
-
-        if ( ((*pca == '\\') && (*pcb == '/'))
-            || ((*pca == '/') && (*pcb == '\\')) )
-        {
-            // empty, mixed slash and back slash count as the same character
-        }
-        else if ( tolower( *pca ) != tolower( *pcb ) )
-            return false;
-
-        if ( (*pca == '\\') || (*pca == '/') )
-            return true;
-
-    } while ( (pca != pathA) && (pcb != pathB) );
-
-    if ( (pca == pathA) && (pcb != pathB) )
-        return (*(pcb - 1) == '\\') || (*(pcb - 1) == '/');
-    else if ( (pcb == pathB) && (pca != pathA) )
-        return (*(pca - 1) == '\\') || (*(pca - 1) == '/');
-
-    _ASSERT( (pca == pathA) && (pcb == pathB) );
-    return true;
-}
-
 
 void ConvertVariantToDataVal( const MagoST::Variant& var, MagoEE::DataValue& dataVal )
 {
@@ -407,6 +353,58 @@ HRESULT WriteFloat( uint8_t* buffer, uint32_t bufSize, MagoEE::Type* type, const
     return S_OK;
 }
 
+HRESULT FromRawValue( const void* srcBuf, MagoEE::Type* type, MagoEE::DataValue& value )
+{
+    _ASSERT( srcBuf != NULL );
+    _ASSERT( type != NULL );
+
+    size_t size = type->GetSize();
+
+    if ( type->IsPointer() )
+    {
+        value.Addr = ReadInt( srcBuf, 0, size, false );
+    }
+    else if ( type->IsIntegral() )
+    {
+        value.UInt64Value = ReadInt( srcBuf, 0, size, type->IsSigned() );
+    }
+    else if ( type->IsReal() || type->IsImaginary() )
+    {
+        value.Float80Value = ReadFloat( srcBuf, 0, type );
+    }
+    else if ( type->IsComplex() )
+    {
+        const size_t    PartSize = type->GetSize() / 2;
+
+        value.Complex80Value.RealPart = ReadFloat( srcBuf, 0, type );
+        value.Complex80Value.ImaginaryPart = ReadFloat( srcBuf, PartSize, type );
+    }
+    else if ( type->IsDArray() )
+    {
+        const size_t LengthSize = type->AsTypeDArray()->GetLengthType()->GetSize();
+        const size_t AddressSize = type->AsTypeDArray()->GetPointerType()->GetSize();
+
+        value.Array.Length = (MagoEE::dlength_t) ReadInt( srcBuf, 0, LengthSize, false );
+        value.Array.Addr = ReadInt( srcBuf, LengthSize, AddressSize, false );
+    }
+    else if ( type->IsAArray() )
+    {
+        value.Addr = ReadInt( srcBuf, 0, size, false );
+    }
+    else if ( type->IsDelegate() )
+    {
+        MagoEE::TypeDelegate* delType = (MagoEE::TypeDelegate*) type;
+        const size_t AddressSize = delType->GetNext()->GetSize();
+
+        value.Delegate.ContextAddr = (MagoEE::dlength_t) ReadInt( srcBuf, 0, AddressSize, false );
+        value.Delegate.FuncAddr = ReadInt( srcBuf, AddressSize, AddressSize, false );
+    }
+    else
+        return E_FAIL;
+
+    return S_OK;
+}
+
 
 //----------------------------------------------------------------------------
 //  Compare values
@@ -561,173 +559,13 @@ bool EqualValue( MagoEE::Type* type, const MagoEE::DataValue& left, const MagoEE
 }
 
 
-////////////////////////////////////////////////////////////////////////
-template<typename T>
-struct DynamicArray
-{
-    size_t length;
-    T* ptr;
-};
-
-struct Interface;
-struct MemberInfo;
-struct OffsetTypeInfo;
-class Object;
-
-// D class info
-struct TypeInfo_Class
-{
-    void* pvtbl; // vtable pointer of TypeInfo_Class object
-    void* monitor;
-
-    DynamicArray<uint8_t> init;   // class static initializer
-    DynamicArray<char>    name;   // class name
-    DynamicArray<void*>   vtbl;   // virtual function pointer table
-    DynamicArray<Interface*> interfaces;
-    TypeInfo_Class*       base;
-    void*                 destructor;
-    void (*classInvariant)(Object);
-    uint32_t              m_flags;
-    //  1:      // is IUnknown or is derived from IUnknown
-    //  2:      // has no possible pointers into GC memory
-    //  4:      // has offTi[] member
-    //  8:      // has constructors
-    // 16:      // has xgetMembers member
-    // 32:      // has typeinfo member
-    void*                 deallocator;
-    DynamicArray<OffsetTypeInfo> m_offTi;
-    void*                 defaultConstructor;
-    const DynamicArray<MemberInfo> (*xgetMembers)(DynamicArray<char*>);
-};
-
-HRESULT GetClassName2( IProcess* process, MachineAddress addr, BSTR* pbstrClassName ) 
-{
-	return GetClassName(process, addr, pbstrClassName);
-}
-
-HRESULT GetClassName( IProcess* process, MachineAddress addr, BSTR* pbstrClassName )
-{
-    _ASSERT( process != NULL );
-    _ASSERT( pbstrClassName != NULL );
-    _ASSERT( process->GetMachine() != NULL );
-
-    IMachine* machine = process->GetMachine();
-    MachineAddress vtbl, classinfo;
-    SIZE_T read, unread;
-    HRESULT hr = machine->ReadMemory( addr, sizeof( vtbl ), read, unread, (uint8_t*) &vtbl );
-    if ( SUCCEEDED( hr ) )
-    {
-        hr = machine->ReadMemory( vtbl, sizeof( classinfo ), read, unread, (uint8_t*) &classinfo );
-        if ( SUCCEEDED( hr ) )
-        {
-            DynamicArray<char> className;
-            hr = machine->ReadMemory( classinfo + offsetof( TypeInfo_Class, name ), sizeof( className ), read, unread, (uint8_t*) &className );
-            if ( SUCCEEDED( hr ) )
-            {
-                if ( className.length < 4096 )
-                {
-                    char* buf = new char[className.length];
-                    if ( buf == NULL )
-                        return E_OUTOFMEMORY;
-                    hr = machine->ReadMemory( (MachineAddress) className.ptr, className.length, read, unread, (uint8_t*) buf );
-                    if ( SUCCEEDED( hr ) )
-                    {
-                        // read at most className.length
-                        hr = Utf8To16( buf, read, *pbstrClassName );
-                    }
-                    delete [] buf;
-                }
-                else
-                {
-                    *pbstrClassName = SysAllocString( L"" );
-                    if ( *pbstrClassName == NULL )
-                        hr = E_OUTOFMEMORY;
-                }
-            }
-        }
-    }
-    return hr;
-}
-
-struct Throwable
-{
-    void* pvtbl; // vtable pointer of TypeInfo_Class object
-    void* monitor;
-
-    DynamicArray<uint8_t> msg;
-    DynamicArray<uint8_t> file;
-    size_t                line;
-    // ...
-};
-
-HRESULT GetExceptionInfo( IProcess* process, MachineAddress addr, BSTR* pbstrInfo )
-{
-    _ASSERT( process != NULL );
-    _ASSERT( pbstrInfo != NULL );
-    _ASSERT( process->GetMachine() != NULL );
-
-    IMachine* machine = process->GetMachine();
-    Throwable throwable;
-    SIZE_T read, unread;
-    HRESULT hr = S_OK;
-    
-    hr = machine->ReadMemory( addr, sizeof( throwable ), read, unread, (uint8_t*) &throwable );
-    if ( FAILED( hr ) )
-        return hr;
-    if ( read < sizeof( throwable ) )
-        return HRESULT_FROM_WIN32( ERROR_PARTIAL_COPY );
-
-    if ( throwable.msg.length >= 1024 || throwable.file.length >= 1024 )
-    {
-        *pbstrInfo = SysAllocString( L"" );
-        if ( *pbstrInfo == NULL )
-            return E_OUTOFMEMORY;
-    }
-    else
-    {
-        CAutoVectorPtr<char>    buf;
-        if ( !buf.Allocate( throwable.msg.length + throwable.file.length + 30 ) )
-            return E_OUTOFMEMORY;
-        char* p = buf;
-        if ( throwable.msg.length > 0 )
-        {
-            hr = machine->ReadMemory( (MachineAddress) throwable.msg.ptr, throwable.msg.length, 
-                                        read, unread, (uint8_t*) p );
-            if ( SUCCEEDED( hr ) )
-            {
-                p += read;    // read at most throwable.msg.length
-                *p++ = ' ';
-            }
-        }
-        if ( throwable.file.length > 0 )
-        {
-            *p++ = 'a';
-            *p++ = 't';
-            *p++ = ' ';
-            hr = machine->ReadMemory( (MachineAddress) throwable.file.ptr, throwable.file.length, 
-                                        read, unread, (uint8_t*) p );
-            if ( SUCCEEDED( hr ) )
-            {
-                p += read;    // read at most throwable.file.length
-                *p++ = '(';
-                p += sprintf_s( p, 12, "%d", throwable.line );
-                *p++ = ')';
-            }
-        }
-        hr = Utf8To16( buf, p - buf, *pbstrInfo );
-        if ( FAILED( hr ) )
-            return hr;
-    }
-    return S_OK;
-}
-
-
 static uint32_t Get16bits( const uint8_t* x )
 {
     return *(uint16_t*) x;
 }
 
-uint32_t HashOf( const void* buffer, uint32_t length )
+template <class T>
+T HashOf( const void* buffer, T length )
 {
     // This is what druntime uses to hash most values longer than 32 bits
     /*
@@ -740,7 +578,7 @@ uint32_t HashOf( const void* buffer, uint32_t length )
 
     const uint8_t* data = (uint8_t*) buffer;
     int rem = 0;
-    uint32_t hash = 0;
+    T hash = 0;
 
     rem = length & 3;
     length >>= 2;
@@ -748,7 +586,7 @@ uint32_t HashOf( const void* buffer, uint32_t length )
     for ( ; length > 0; length-- )
     {
         hash += Get16bits( data );
-        uint32_t temp = (Get16bits( data + 2 ) << 11) ^ hash;
+        T temp = (Get16bits( data + 2 ) << 11) ^ hash;
         hash = (hash << 16) ^ temp;
         data += 2 * sizeof( uint16_t );
         hash += hash >> 11;
@@ -783,4 +621,33 @@ uint32_t HashOf( const void* buffer, uint32_t length )
     hash += hash >> 6;
 
     return hash;
+}
+
+uint32_t HashOf32( const void* buffer, uint32_t length )
+{
+    return HashOf<uint32_t>( buffer, length );
+}
+
+uint64_t HashOf64( const void* buffer, uint32_t length )
+{
+    return HashOf<uint64_t>( buffer, length );
+}
+
+
+namespace Mago
+{
+    const wchar_t AddressPrefix[] = L"0x";
+
+    void FormatAddress( wchar_t* str, size_t length, Address64 address, int ptrSize, bool usePrefix )
+    {
+        const wchar_t* activePrefix = L"";
+
+        if ( usePrefix )
+            activePrefix = AddressPrefix;
+
+        if ( ptrSize == 8 )
+            swprintf_s( str, length, L"%s%016I64x", activePrefix, (uint64_t) address );
+        else
+            swprintf_s( str, length, L"%s%08x", activePrefix, (uint32_t) address );
+    }
 }

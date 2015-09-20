@@ -1,5 +1,12 @@
 #pragma once
 
+#include "..\..\CVSym\CVSTI\CVSTI.h"
+//#include "..\..\CVSym\CVSym\CVSymPublic.h"
+//#include "..\..\CVSym\CVSym\cvconst.h"
+
+#include "..\MagoNatDE\Utility.h"
+#include "..\MagoNatDE\ExprContext.h"
+
 #include "Types.h"
 #include "Debuggee.h"
 
@@ -31,6 +38,7 @@ namespace MagoWrapper
 
 		~DebugScopedSymbol();
 	internal:
+		int mPtrSize;
 
 		DebugScopedSymbol(
 			String^ name, 
@@ -45,8 +53,7 @@ namespace MagoWrapper
 	public ref class SymbolResolver
 	{
 	public:
-		SymbolResolver(
-			Debuggee^ debuggee);
+		SymbolResolver(Debuggee^ debuggee, int ptrSize);
 		~SymbolResolver();
 
 		ULONG64 GetAddressFromCodeLine(
@@ -57,11 +64,10 @@ namespace MagoWrapper
 			[Runtime::InteropServices::Out] String^ %File,
 			[Runtime::InteropServices::Out] ULONG %Line);
 
-		String^ GetFunctionNameFromAddress(ULONG64 address, DWORD threadId);
 
 		List<DebugScopedSymbol^>^ GetLocalSymbols(DWORD threadId);
 		List<DebugScopedSymbol^>^ GetLocalSymbols(DWORD threadId, Address frameAddress);
-		List<DebugScopedSymbol^>^ GetChildSymbols(String^ expression);
+		List<DebugScopedSymbol^>^ GetChildSymbols(String^ expression, DWORD threadId);
 		DebugScopedSymbol^ Evaluate(String^ expression, DWORD threadId);
 
 	internal:
@@ -71,12 +77,13 @@ namespace MagoWrapper
 		Guard* mExprContextGuard;
 
 	private:
-		Debuggee^ mDebuggee;
 
-		HRESULT FindModuleContainingAddress(ULONG64 address, Mago::Module*& module);
+		Debuggee^ mDebuggee;
+		int mPtrSize;
+
 		HRESULT EnumerateLocalSymbols(ULONG64 address, DWORD threadId, List<DebugScopedSymbol^>^ list);
 
-		bool InternalGetAddressByLine( 
+		bool InternalGetAddressesByLine(
 			bool exactMatch, 
 			const char* fileName, 
 			size_t fileNameLen, 
@@ -90,70 +97,12 @@ namespace MagoWrapper
 			WORD* fileNameLen, 
 			uint16_t* lineNum);
 
-		HRESULT GetStackFrameName(
-			uintptr_t address,
-			DWORD threadId,
-			Mago::Module* module,
-			FRAMEINFO_FLAGS flags, 
-			UINT radix, 
-			BSTR* funcName );
-
-		HRESULT AppendFunctionNameWithAddress( 
-			uintptr_t address,
-			Mago::Module* module,
-			FRAMEINFO_FLAGS flags, 
-			UINT radix, 
-			CString& fullName );
-
-		HRESULT AppendFunctionNameWithSymbols( 
-			uintptr_t address,
-			DWORD threadId,
-			Mago::Module* module,
-			FRAMEINFO_FLAGS flags, 
-			UINT radix, 
-			CString& fullName );
-
-		HRESULT AppendFunctionNameWithSymbols( 
-			uintptr_t address,
-			DWORD threadId,
-			Mago::Module* module,
-			FRAMEINFO_FLAGS flags, 
-			UINT radix,
-			MagoST::ISession* session,
-			MagoST::ISymbolInfo* symInfo, 
-			MagoST::SymHandle& func,
-			CString& fullName );
+		HRESULT EvaluateExpression(String^ expression, DWORD threadId, IDebugProperty2** dp);
 
 		HRESULT SymbolResolver::GetStackLineInfo(
 			uintptr_t address,
 			Mago::Module* module,
 			StackLineInfo& info );
-
-		HRESULT FindFunction(
-			uintptr_t address, 
-			Mago::Module* module, 
-			MagoST::SymHandle& func,  
-			MagoST::SymHandle& block);
-
-		HRESULT AppendArgs(
-			FRAMEINFO_FLAGS flags, 
-			UINT radix, 
-			uintptr_t address, 
-			DWORD threadId,
-			Mago::Module* module, 
-			MagoST::ISession* session,
-			MagoST::ISymbolInfo* symInfo,
-			MagoST::SymHandle& func,
-			CString& outputStr );
-
-		HRESULT MakeExprContext(
-			ULONG64 address, 
-			DWORD threadId,
-			Mago::Module* module, 
-			Mago::IRegisterSet* regSet,
-			MagoST::SymHandle& func,  
-			MagoST::SymHandle& block,
-			Mago::ExprContext*& exprCtx);
 
 	};
 
