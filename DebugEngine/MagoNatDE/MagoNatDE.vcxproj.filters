@@ -14,11 +14,17 @@
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
     </Filter>
     <Filter Include="Generated Files">
-      <UniqueIdentifier>{3f92c922-8b92-4e70-92f6-ac5e4d4d88bf}</UniqueIdentifier>
+      <UniqueIdentifier>{e7d783a8-f650-4d8f-ae67-a30d16a366de}</UniqueIdentifier>
       <SourceControlFiles>False</SourceControlFiles>
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ArchData.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ArchDataX86.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="BoundBreakpoint.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -58,7 +64,13 @@
     <ClCompile Include="dllmain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="DocTracker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="DocumentContext.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DRuntime.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Engine.cpp">
@@ -88,6 +100,9 @@
     <ClCompile Include="Events.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ExceptionTable.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="Expr.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -101,6 +116,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="InstCache.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LocalProcess.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MagoNatDE.cpp">
@@ -130,6 +148,18 @@
     <ClCompile Include="RegProperty.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="RemoteDebuggerProxy.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RemoteEventRpc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RemoteProcess.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RpcUtil.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="SingleDocumentContext.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -142,50 +172,20 @@
     <ClCompile Include="Utility.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="DocTracker.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ExceptionTable.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ArchDataX86.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ArchData.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="WinStackWalker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="DRuntime.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="MagoNatDE_i.c">
+      <Filter>Generated Files</Filter>
     </ClCompile>
-    <ClCompile Include="LocalProcess.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="MagoRemoteCmd_c.c">
+      <Filter>Generated Files</Filter>
     </ClCompile>
-    <ClCompile Include="RemoteProcess.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="RemoteDebuggerProxy.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="RpcUtil.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="RemoteEventRpc.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="MagoRemoteEvent_s.c">
+      <Filter>Generated Files</Filter>
     </ClCompile>
     <ClCompile Include="ArchDataX64.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MagoNatDE.idl.c">
-      <Filter>Generated Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Include\MagoRemoteCmd.idl.c">
-      <Filter>Generated Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Include\MagoRemoteEvent.idl.c">
-      <Filter>Generated Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -198,7 +198,6 @@
     <None Include="MagoNatDE.rgs">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="ReadMe.txt" />
     <None Include="..\Include\MagoRemoteCmd.acf" />
     <None Include="..\Include\MagoRemoteEvent.acf" />
   </ItemGroup>
@@ -209,14 +208,20 @@
     <Midl Include="..\Include\MagoRemoteCmd.idl">
       <Filter>Source Files</Filter>
     </Midl>
-    <Midl Include="..\Include\MagoRemoteEvent.idl">
+    <Midl Include="..\Include\MagoRemoteCommon.idl">
       <Filter>Source Files</Filter>
     </Midl>
-    <Midl Include="..\Include\MagoRemoteCommon.idl">
+    <Midl Include="..\Include\MagoRemoteEvent.idl">
       <Filter>Source Files</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ArchData.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ArchDataX86.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="BoundBreakpoint.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -265,7 +270,13 @@
     <ClInclude Include="dllmain.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="DocTracker.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="DocumentContext.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DRuntime.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Engine.h">
@@ -295,6 +306,9 @@
     <ClInclude Include="Events.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ExceptionTable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="Expr.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -307,7 +321,19 @@
     <ClInclude Include="FrameProperty.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ICoreProcess.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IDebuggerProxy.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="InstCache.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IRemoteEventCallback.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LocalProcess.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MemoryBytes.h">
@@ -334,7 +360,19 @@
     <ClInclude Include="RegProperty.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="RemoteDebuggerProxy.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RemoteEventRpc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RemoteProcess.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="Resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RpcUtil.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SingleDocumentContext.h">
@@ -352,58 +390,28 @@
     <ClInclude Include="Utility.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="winternl2.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DocTracker.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ExceptionTable.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ArchDataX86.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ArchData.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="WinStackWalker.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="DRuntime.h">
+    <ClInclude Include="winternl2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ICoreProcess.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="MagoNatDE_i.h">
+      <Filter>Generated Files</Filter>
     </ClInclude>
-    <ClInclude Include="LocalProcess.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="MagoRemoteCmd_i.h">
+      <Filter>Generated Files</Filter>
     </ClInclude>
-    <ClInclude Include="IDebuggerProxy.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="RemoteProcess.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="RemoteDebuggerProxy.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="RpcUtil.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="IRemoteEventCallback.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="RemoteEventRpc.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ArchDataX64.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="MagoRemoteEvent_i.h">
+      <Filter>Generated Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="MagoNatDE.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="ReadMe.txt" />
   </ItemGroup>
 </Project>

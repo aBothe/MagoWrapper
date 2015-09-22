@@ -3,11 +3,11 @@
 /* this ALWAYS GENERATED file contains the RPC server stubs */
 
 
- /* File created by MIDL compiler version 8.00.0595 */
-/* at Sat Sep 19 12:59:37 2015
+ /* File created by MIDL compiler version 8.00.0603 */
+/* at Tue Sep 22 13:39:35 2015
  */
 /* Compiler settings for ..\Include\MagoRemoteEvent.idl:
-    Oicf, W1, Zp8, env=Win32 (32b run), target_arch=X86 8.00.0595 
+    Oicf, W1, Zp8, env=Win32 (32b run), target_arch=X86 8.00.0603 
     protocol : dce , ms_ext, c_ext, robust
     error checks: allocation ref bounds_check enum stub_data 
     VC __declspec() decoration level: 
@@ -972,7 +972,7 @@ static const MIDL_STUB_DESC MagoRemoteEvent_StubDesc =
     1, /* -error bounds_check flag */
     0x50002, /* Ndr library version */
     0,
-    0x8000253, /* MIDL Version 8.0.595 */
+    0x800025b, /* MIDL Version 8.0.603 */
     0,
     0,
     0,  /* notify & notify_flag routine table */

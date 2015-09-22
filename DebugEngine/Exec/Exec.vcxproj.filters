@@ -18,6 +18,9 @@
     <ClCompile Include="Common.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="DebuggerProxy.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="DecodeX86.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -31,6 +34,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MachineX86Base.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MakeMachine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Module.cpp">
@@ -51,18 +57,15 @@
     <ClCompile Include="Utility.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MakeMachine.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DebuggerProxy.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MachineX64.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CommandFunctor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="Common.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DebuggerProxy.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DecodeX86.h">
@@ -101,6 +104,9 @@
     <ClInclude Include="MachineX86Base.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="MakeMachine.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="Module.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -125,21 +131,9 @@
     <ClInclude Include="Utility.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MakeMachine.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DebuggerProxy.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CommandFunctor.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MachineX64.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Notes.txt" />
-    <None Include="ReadMe.txt" />
+    <Text Include="Notes.txt" />
+    <Text Include="ReadMe.txt" />
   </ItemGroup>
 </Project>

@@ -31,7 +31,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Notes.txt" />
-    <None Include="ReadMe.txt" />
+    <Text Include="Notes.txt" />
+    <Text Include="ReadMe.txt" />
   </ItemGroup>
 </Project>
