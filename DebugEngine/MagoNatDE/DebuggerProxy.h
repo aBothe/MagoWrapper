@@ -16,7 +16,7 @@ namespace Mago
 {
     class ArchData;
     class IRegisterSet;
-    class EventCallback;
+	class EventCallbackBase;
     class ICoreProcess;
     class ICoreThread;
 
@@ -25,13 +25,13 @@ namespace Mago
     {
         MagoCore::DebuggerProxy mExecThread;
         RefPtr<ArchData>        mArch;
-        RefPtr<EventCallback>   mCallback;
+        RefPtr<EventCallbackBase>   mCallback;
 
     public:
         DebuggerProxy();
         ~DebuggerProxy();
 
-        HRESULT Init( EventCallback* callback );
+		HRESULT Init(EventCallbackBase* callback);
         HRESULT Start();
         void    Shutdown();
 

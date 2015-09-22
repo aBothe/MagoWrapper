@@ -3,25 +3,18 @@
 #include "DebuggerCallback.h"
 
 #include "..\..\CVSym\CVSym\Error.h"
-//#include "..\..\CVSym\CVSym\CVSymPublic.h"
-
-//#include "..\Exec\Utility.h"
-
-//#include "..\Exec\IProcess.h"
-//#include "..\Exec\Process.h"
-//#include "..\Exec\Machine.h"
 
 #include "..\..\CVSym\CVSTI\CVSTI.h"
 
-#include "..\UnitTests\utestExec\Utility.h"
+//#include "..\UnitTests\utestExec\Utility.h"
 
 #include "..\MagoNatDE\Utility.h"
 #include "..\MagoNatDE\Thread.h"
-//#include "..\MagoNatDE\ICoreProcess.h"
 #include "..\MagoNatDE\LocalProcess.h"
 #include "..\MagoNatDE\ArchData.h"
 #include "..\MagoNatDE\EnumFrameInfo.h"
 #include "..\MagoNatDE\Program.h"
+#include "..\MagoNatDE\CodeContext.h"
 
 using namespace System::Collections::Generic;
 
@@ -257,7 +250,6 @@ namespace MagoWrapper{
 
 	uint32_t Debuggee::GetProcessId()
 	{
-		//return mProcess->GetId();
 		return mProcess->GetPid();
 	}
 
@@ -284,40 +276,57 @@ namespace MagoWrapper{
 			| FIF_FUNCNAME_OFFSET
 			| FIF_FUNCNAME_ARGS_TYPES
 			| FIF_FUNCNAME_ARGS_NAMES
-			| FIF_FUNCNAME_ARGS_VALUES;
+			| FIF_FUNCNAME_ARGS_VALUES
+			| FIF_FRAME;
 
 
 		DWORD tid = NULL;
-		thread->GetThreadId(&tid);
+		hr = thread->GetThreadId(&tid);
+		if (FAILED(hr))
+			return frames;
 
-		Mago::Thread::Callstack callstack;
-		thread->BuildCallstack(callstack);
+		IEnumDebugFrameInfo2* edfi = NULL;
+		hr = thread->EnumFrameInfo(flags, 10, &edfi);
+		if (FAILED(hr))
+			return frames;
 
-		Mago::FrameInfoArray  array(callstack.size());
-		int i = 0;
-		for (Mago::Thread::Callstack::const_iterator it = callstack.begin();
-			it != callstack.end();
-			it++, i++)
+		ULONG cnt = 0;
+		hr = edfi->GetCount(&cnt);
+		if (FAILED(hr))
+			return frames;
+		
+		ULONG fetched = 0;
+		Mago::FrameInfoArray  array(cnt);
+		while (fetched < cnt)
 		{
+			ULONG ft = 0;
+			hr = edfi->Next(cnt - fetched, &array[fetched], &ft);
+			if (FAILED(hr))
+				return frames;
+			fetched += ft;
+		}
+
+		for (ULONG i = 0; i < fetched; i++)
+		{
+			FRAMEINFO* fi = &array[i];
+			IDebugCodeContext2* dcCtx = NULL;
 			
-			HRESULT hr = (*it)->GetInfo(flags, 10, &array[i]);
+			hr = fi->m_pFrame->GetCodeContext(&dcCtx);
 			if (FAILED(hr))
 				continue;
+
+			CComQIPtr<Mago::IMagoMemoryContext> mmCtx = dcCtx; //how else to get address?
+			Mago::Address64 addr = 0;
+			hr = mmCtx->GetAddress(addr);
+
 			CallStackFrame^ frame = gcnew CallStackFrame();
-			//frame->InstructionPointer = it->Eip;
-			//frame->BasePointer = it->Ebp;
-			//frames->Add(frame);
-
-			FRAMEINFO* fi = &array[i];
-			
-
 			frame->AddressMin = fi->m_addrMin;
 			frame->AddressMax = fi->m_addrMax;
 			frame->FunctionName = gcnew String(fi->m_bstrFuncName);
 			frame->Args = gcnew String(fi->m_bstrArgs);
 			frame->ReturnType = gcnew String(fi->m_bstrReturnType);
 			frame->Language = gcnew String(fi->m_bstrLanguage);
-			frame->InstructionPointer = (*it)->GetEip();
+			frame->InstructionPointer = addr;
 			frames->Add(frame);
 		}
 

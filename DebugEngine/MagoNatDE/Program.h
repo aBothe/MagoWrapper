@@ -129,6 +129,7 @@ namespace Mago
         Address64   FindEntryPoint();
 
         HRESULT     CreateModule( ICoreModule* coreMod, RefPtr<Module>& mod );
+		HRESULT     CreateModuleInternal( ICoreModule* coreModule, RefPtr<Module>& mod, DWORD modId );
         HRESULT     AddModule( Module* mod );
         bool        FindModule( Address64 address, RefPtr<Module>& mod );
         bool        FindModuleContainingAddress( Address64 address, RefPtr<Module>& mod );

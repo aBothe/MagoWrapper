@@ -596,15 +596,25 @@ namespace Mago
     {
         HRESULT hr = S_OK;
 
-        hr = MakeCComObject( mod );
-        if ( FAILED( hr ) )
-            return hr;
-
-        mod->SetId( mEngine->GetNextModuleId() );
-        mod->SetCoreModule( coreModule );
+		DWORD modId = mEngine->GetNextModuleId();
+		hr = CreateModuleInternal(coreModule, mod, modId);
 
         return hr;
     }
+
+	HRESULT Program::CreateModuleInternal(ICoreModule* coreModule, RefPtr<Module>& mod, DWORD modId)
+	{
+		HRESULT hr = S_OK;
+
+		hr = MakeCComObject(mod);
+		if (FAILED(hr))
+			return hr;
+
+		mod->SetId(modId);
+		mod->SetCoreModule(coreModule);
+
+		return hr;
+	}
 
     HRESULT Program::AddModule( Module* mod )
     {

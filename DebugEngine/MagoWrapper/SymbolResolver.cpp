@@ -11,6 +11,7 @@
 #include "..\MagoNatDE\Config.h"
 #include "..\MagoNatDE\EnumFrameInfo.h"
 #include "..\MagoNatDE\Program.h"
+#include "..\MagoNatDE\CodeContext.h"
 
 using namespace System::Runtime::InteropServices;
 
@@ -207,13 +208,50 @@ namespace MagoWrapper
 		if (!mDebuggee->GetThread(threadId, thread))
 			return E_FAIL;
 
-		Mago::Thread::Callstack callstack;
-		HRESULT hr = thread->BuildCallstack(callstack);
-		if (FAILED(hr) || callstack.size() == 0)
+		FRAMEINFO_FLAGS flags =
+			FIF_DEBUGINFO
+			| FIF_FUNCNAME
+			| FIF_RETURNTYPE
+			| FIF_ARGS
+			| FIF_LANGUAGE
+			| FIF_MODULE
+			| FIF_FUNCNAME_MODULE
+			| FIF_FUNCNAME_ARGS_ALL
+			| FIF_FUNCNAME_LINES
+			| FIF_FUNCNAME_OFFSET
+			| FIF_FUNCNAME_ARGS_TYPES
+			| FIF_FUNCNAME_ARGS_NAMES
+			| FIF_FUNCNAME_ARGS_VALUES
+			| FIF_FRAME;
+
+		IEnumDebugFrameInfo2* edfi = NULL;
+		HRESULT hr = thread->EnumFrameInfo(flags, 10, &edfi);
+		if (FAILED(hr))
 			return hr;
 
+		ULONG cnt = 0;
+		hr = edfi->GetCount(&cnt);
+		if (FAILED(hr))
+			return hr;
+
+		ULONG fetched = 0;
+		Mago::FrameInfoArray  array(cnt);
+		while (fetched < cnt)
+		{
+			ULONG ft = 0;
+			hr = edfi->Next(cnt - fetched, &array[fetched], &ft);
+			if (FAILED(hr))
+				return hr;
+			fetched += ft;
+		}
+
+		if (fetched == 0)
+			return E_FAIL;
+
+		//use first item
+		FRAMEINFO* fi = &array[0];
 		IDebugExpressionContext2* dectx = NULL;
-		hr = callstack[0]->GetExpressionContext(&dectx);
+		hr = fi->m_pFrame->GetExpressionContext(&dectx);
 		if (FAILED(hr))
 			return hr;
 
@@ -296,28 +334,61 @@ namespace MagoWrapper
 		if (!mDebuggee->GetThread(threadId, thread))
 			return E_FAIL;
 
-		Mago::Thread::Callstack callstack;
-		thread->BuildCallstack(callstack);
+		FRAMEINFO_FLAGS flags =
+			FIF_DEBUGINFO
+			| FIF_FUNCNAME
+			| FIF_RETURNTYPE
+			| FIF_ARGS
+			| FIF_LANGUAGE
+			| FIF_MODULE
+			| FIF_FUNCNAME_MODULE
+			| FIF_FUNCNAME_ARGS_ALL
+			| FIF_FUNCNAME_LINES
+			| FIF_FUNCNAME_OFFSET
+			| FIF_FUNCNAME_ARGS_TYPES
+			| FIF_FUNCNAME_ARGS_NAMES
+			| FIF_FUNCNAME_ARGS_VALUES
+			| FIF_FRAME;
 
-		Mago::StackFrame* sfrm = NULL;
-		int i = 0;
-		for (Mago::Thread::Callstack::const_iterator it = callstack.begin();
-			it != callstack.end();
-			it++, i++)
+		IEnumDebugFrameInfo2* edfi = NULL;
+		hr = thread->EnumFrameInfo(flags, 10, &edfi);
+		if (FAILED(hr))
+			return hr;
+
+		ULONG cnt = 0;
+		hr = edfi->GetCount(&cnt);
+		if (FAILED(hr))
+			return hr;
+
+		ULONG fetched = 0;
+		Mago::FrameInfoArray  array(cnt);
+		while (fetched < cnt)
 		{
-			Mago::Address64 addr;
-			Mago::Address64 eip;
-			hr = (*it)->GetAddress(addr);
+			ULONG ft = 0;
+			hr = edfi->Next(cnt - fetched, &array[fetched], &ft);
 			if (FAILED(hr))
 				return hr;
+			fetched += ft;
+		}
 
-			hr = (*it)->GetAddress(eip);
+		FRAMEINFO* sfrm = NULL;
+		for (ULONG i; i < fetched; i++)
+		{
+			FRAMEINFO* fi = &array[i];
+			IDebugCodeContext2* dcCtx = NULL;
+			hr = fi->m_pFrame->GetCodeContext(&dcCtx);
 			if (FAILED(hr))
-				return hr;
+				continue;
+
+			CComQIPtr<Mago::IMagoMemoryContext> mmCtx = dcCtx; //how else to get address?
+			Mago::Address64 addr = 0;
+			hr = mmCtx->GetAddress(addr);
+			if (FAILED(hr))
+				continue;
 
 			if (addr == address)
 			{
-				sfrm = (*it);
+				sfrm = fi;
 				break;
 			}
 		}
@@ -334,14 +405,13 @@ namespace MagoWrapper
 			| DEBUGPROP_INFO_ATTRIB;
 
 		IEnumDebugPropertyInfo2* pi = NULL;	
-		ULONG fetched = 0;
-		hr = sfrm->EnumProperties(diflags, 10, guidFilterAllLocalsPlusArgs, 2000, &fetched, &pi);
-		//array.Detach();
+		fetched = 0;
+		hr = sfrm->m_pFrame->EnumProperties(diflags, 10, guidFilterAllLocalsPlusArgs, 2000, &fetched, &pi);
 		
 		if (FAILED(hr))
 			return hr;
 
-		ULONG cnt = fetched;
+		cnt = fetched;
 		fetched = 0;
 		DEBUG_PROPERTY_INFO* dpiArray = new DEBUG_PROPERTY_INFO[cnt];
 		while (fetched < cnt)

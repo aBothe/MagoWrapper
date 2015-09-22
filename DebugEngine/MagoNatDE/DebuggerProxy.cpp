@@ -10,7 +10,7 @@
 #include "ArchDataX86.h"
 #include "RegisterSet.h"
 #include "..\Exec\DebuggerProxy.h"
-#include "EventCallback.h"
+#include "EventCallbackBase.h"
 #include "LocalProcess.h"
 
 
@@ -25,7 +25,7 @@ namespace Mago
         Shutdown();
     }
 
-    HRESULT DebuggerProxy::Init( EventCallback* callback )
+	HRESULT DebuggerProxy::Init(EventCallbackBase* callback)
     {
         _ASSERT( callback != NULL );
         if ( (callback == NULL) )
