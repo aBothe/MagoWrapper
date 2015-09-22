@@ -262,7 +262,7 @@ Error:
         }
     }
 
-    HRESULT RemoteDebuggerProxy::Init( EventCallbackBase* callback )
+    HRESULT RemoteDebuggerProxy::Init( EventCallback* callback )
     {
         _ASSERT( callback != NULL );
         if ( (callback == NULL) )

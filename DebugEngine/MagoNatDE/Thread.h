@@ -17,16 +17,18 @@ namespace Mago
     class ICoreProcess;
     class ICoreThread;
 
+
     class Thread : 
         public CComObjectRootEx<CComMultiThreadModel>,
         public IDebugThread2
     {
+        typedef std::vector< RefPtr<StackFrame> > Callstack;
+
         RefPtr<ICoreThread> mCoreThread;
         RefPtr<Program>     mProg;
         Address64           mCurPC;
         Address64           mCallerPC;
         IDebuggerProxy*     mDebugger;
-		ICoreProcess*       mCoreProcess;
 
     public:
         Thread();
@@ -65,27 +67,23 @@ namespace Mago
             IDebugLogicalThread2** ppLogicalThread );
 
     public:
-		typedef std::vector< RefPtr<StackFrame> > Callstack;
-
         ICoreThread*    GetCoreThread();
         void            SetCoreThread( ICoreThread* thread );
         Program*        GetProgram();
         void            SetProgram( Program* prog, IDebuggerProxy* pollThread );
-		void			SetCoreProcess( ICoreProcess* proc, IDebuggerProxy* pollThread );
         ICoreProcess*   GetCoreProcess();
         IDebuggerProxy* GetDebuggerProxy();
 
         HRESULT Step( ICoreProcess* coreProc, STEPKIND sk, STEPUNIT step, bool handleException );
-		HRESULT BuildCallstack(Callstack& callstack);
-		HRESULT MakeEnumFrameInfoFromCallstack(
-			const Callstack& callstack,
-			FRAMEINFO_FLAGS dwFieldSpec,
-			UINT nRadix,
-			IEnumDebugFrameInfo2** ppEnum);
 
     private:
         HRESULT BuildCallstack( IRegisterSet* topRegSet, Callstack& callstack );
         HRESULT AddCallstackFrame( IRegisterSet* regSet, Callstack& callstack );
+        HRESULT MakeEnumFrameInfoFromCallstack( 
+            const Callstack& callstack,
+            FRAMEINFO_FLAGS dwFieldSpec, 
+            UINT nRadix, 
+            IEnumDebugFrameInfo2** ppEnum );
 
         HRESULT StepStatement( ICoreProcess* coreProc, STEPKIND sk, bool handleException );
         HRESULT StepInstruction( ICoreProcess* coreProc, STEPKIND sk, bool handleException );

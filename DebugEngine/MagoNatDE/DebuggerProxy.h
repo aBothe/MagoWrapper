@@ -8,8 +8,8 @@
 #pragma once
 
 #include "IDebuggerProxy.h"
-#include "EventCallbackBase.h"
 #include "..\Exec\DebuggerProxy.h"
+
 #include <string>
 
 namespace Mago
@@ -25,13 +25,13 @@ namespace Mago
     {
         MagoCore::DebuggerProxy mExecThread;
         RefPtr<ArchData>        mArch;
-		RefPtr<EventCallbackBase>   mCallback;
+        RefPtr<EventCallback>   mCallback;
 
     public:
         DebuggerProxy();
         ~DebuggerProxy();
 
-		HRESULT Init(EventCallbackBase* callback);
+        HRESULT Init( EventCallback* callback );
         HRESULT Start();
         void    Shutdown();
 

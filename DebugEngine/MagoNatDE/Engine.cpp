@@ -9,7 +9,6 @@
 #include "Engine.h"
 #include "Program.h"
 #include "ProgramNode.h"
-#include "EventCallbackBase.h"
 #include "EventCallback.h"
 #include "Events.h"
 #include "PendingBreakpoint.h"
@@ -46,7 +45,7 @@ namespace Mago
     HRESULT Engine::FinalConstruct()
     {
         HRESULT                 hr = S_OK;
-        RefPtr<EventCallbackBase>   callback( new EventCallback( this ) );
+        RefPtr<EventCallback>   callback( new EventCallback( this ) );
 
         if ( callback.Get() == NULL )
             return E_OUTOFMEMORY;

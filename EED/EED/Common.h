@@ -21,7 +21,7 @@
 #include <errno.h>
 #include <crtdbg.h>
 #include <memory.h>
-#include <stdint.h>
+
 #include <inttypes.h>
 
 // C++

@@ -93,8 +93,6 @@ namespace Mago
         STDMETHOD( GetThread )( 
            IDebugThread2** ppThread );
 
-		Address64 GetEip();
-		HRESULT GetAddress(Address64& address);
     public:
         void Init(
             Address64 pc,

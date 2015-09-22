@@ -9,7 +9,6 @@
 
 #include "IDebuggerProxy.h"
 #include "IRemoteEventCallback.h"
-#include "EventCallbackBase.h"
 
 
 typedef void* HCTXCMD;
@@ -28,7 +27,7 @@ namespace Mago
     class RemoteDebuggerProxy : public IDebuggerProxy, public IRemoteEventCallback
     {
         long                    mRefCount;
-		RefPtr<EventCallbackBase>   mCallback;
+        RefPtr<EventCallback>   mCallback;
         GUID                    mSessionGuid;
         HCTXCMD                 mhContext[2];
         DWORD                   mEventPhysicalTid;
@@ -41,7 +40,7 @@ namespace Mago
         void AddRef();
         void Release();
 
-        HRESULT Init( EventCallbackBase* callback );
+        HRESULT Init( EventCallback* callback );
         HRESULT Start();
         void Shutdown();
 

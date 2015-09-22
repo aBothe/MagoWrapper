@@ -89,9 +89,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Strings.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="Common.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -176,8 +173,11 @@
     <ClInclude Include="UniAlpha.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Strings.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="ReadMe.txt" />
+    <None Include="ReadMe.txt" />
   </ItemGroup>
 </Project>

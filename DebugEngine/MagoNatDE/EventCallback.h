@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include "EventCallbackBase.h"
 
 namespace Mago
 {
@@ -18,7 +17,8 @@ namespace Mago
     class ICoreThread;
     class ICoreModule;
 
-    class EventCallback : public EventCallbackBase
+
+    class EventCallback
     {
         long                    mRefCount;
         Engine*                 mEngine; // not RefPtr<Engine> to avoid circular reference counts

@@ -294,7 +294,6 @@ namespace Mago
         HRESULT hr = S_OK;
         CComPtr<IDebugProperty2>    rootProp;
 
-
         hr = GetDebugProperty( &rootProp );
         if ( FAILED( hr ) )
             return hr;
@@ -331,11 +330,6 @@ namespace Mago
 
 
     //----------------------------------------------------------------------------
-
-	Address64 StackFrame::GetEip()
-	{
-		return mRegSet->GetPC();
-	}
 
     void StackFrame::Init(
         Address64 pc,
@@ -706,11 +700,4 @@ namespace Mago
 
         return S_OK;
     }
-
-
-	HRESULT StackFrame::GetAddress(Address64& address)
-	{
-		address = mPC;
-		return S_OK;
-	}
 }

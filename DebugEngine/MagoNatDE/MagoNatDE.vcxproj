@@ -26,29 +26,29 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <PlatformToolset>v110</PlatformToolset>
     <UseOfAtl>Dynamic</UseOfAtl>
     <CharacterSet>Unicode</CharacterSet>
     <WholeProgramOptimization>true</WholeProgramOptimization>
+    <PlatformToolset>v120</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
-    <PlatformToolset>v110</PlatformToolset>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseOfAtl>Dynamic</UseOfAtl>
     <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v120</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <PlatformToolset>v110</PlatformToolset>
     <UseOfAtl>Dynamic</UseOfAtl>
     <CharacterSet>Unicode</CharacterSet>
     <WholeProgramOptimization>true</WholeProgramOptimization>
+    <PlatformToolset>v120</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <PlatformToolset>v110</PlatformToolset>
     <UseOfAtl>Dynamic</UseOfAtl>
     <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v120</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -63,39 +63,21 @@
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\..\PropSheets\MagoDbg_properties.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\..\PropSheets\MagoDbg_properties.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <_ProjectFileVersion>12.0.30501.0</_ProjectFileVersion>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
-    <IntDir>$(Configuration)\</IntDir>
-    <IgnoreImportLibrary>true</IgnoreImportLibrary>
-    <LinkIncremental>true</LinkIncremental>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(Platform)\$(Configuration)\</IntDir>
-    <IgnoreImportLibrary>true</IgnoreImportLibrary>
-    <LinkIncremental>true</LinkIncremental>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
-    <IntDir>$(Configuration)\</IntDir>
-    <IgnoreImportLibrary>true</IgnoreImportLibrary>
-    <LinkIncremental>false</LinkIncremental>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(Platform)\$(Configuration)\</IntDir>
-    <IgnoreImportLibrary>true</IgnoreImportLibrary>
-    <LinkIncremental>false</LinkIncremental>
+    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
+    <IgnoreImportLibrary Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</IgnoreImportLibrary>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</LinkIncremental>
+    <IgnoreImportLibrary Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</IgnoreImportLibrary>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</LinkIncremental>
+    <IgnoreImportLibrary Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</IgnoreImportLibrary>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkIncremental>
+    <IgnoreImportLibrary Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</IgnoreImportLibrary>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Midl>
@@ -106,25 +88,23 @@
       <GenerateStublessProxies>true</GenerateStublessProxies>
       <TypeLibraryName>$(IntDir)MagoNatDE.tlb</TypeLibraryName>
       <HeaderFileName>MagoNatDE_i.h</HeaderFileName>
-      <DllDataFileName />
+      <DllDataFileName>
+      </DllDataFileName>
       <InterfaceIdentifierFileName>MagoNatDE_i.c</InterfaceIdentifierFileName>
       <ProxyFileName>MagoNatDE_p.c</ProxyFileName>
       <ValidateAllParameters>true</ValidateAllParameters>
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\Include;$(ProjectDir)..\Include;$(ProjectDir)..\..\EED\Real;$(ProjectDir)..\..\EED\gdtoa;$(ProjectDir)..\..\CVSym\Include;$(ProjectDir)..\..\EED\Include;$(ProjectDir)..\..\udis86;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\Include;$(ProjectDir)..\Include;$(ProjectDir)..\..\EED\Real;$(ProjectDir)..\..\EED\gdtoa;$(ProjectDir)..\..\CVSym\Include;$(ProjectDir)..\..\EED\Include;$(ProjectDir)..\..\udis86;$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>RPC_USE_NATIVE_WCHAR;WIN32;_WINDOWS;_DEBUG;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>Common.h</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <DisableSpecificWarnings>4100;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <CompileAsManaged>
-      </CompileAsManaged>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -144,12 +124,14 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Midl>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MkTypLibCompatible>false</MkTypLibCompatible>
       <TargetEnvironment>X64</TargetEnvironment>
       <GenerateStublessProxies>true</GenerateStublessProxies>
       <TypeLibraryName>$(IntDir)MagoNatDE.tlb</TypeLibraryName>
       <HeaderFileName>MagoNatDE_i.h</HeaderFileName>
-      <DllDataFileName />
+      <DllDataFileName>
+      </DllDataFileName>
       <InterfaceIdentifierFileName>MagoNatDE_i.c</InterfaceIdentifierFileName>
       <ProxyFileName>MagoNatDE_p.c</ProxyFileName>
     </Midl>
@@ -190,16 +172,16 @@
       <GenerateStublessProxies>true</GenerateStublessProxies>
       <TypeLibraryName>$(IntDir)MagoNatDE.tlb</TypeLibraryName>
       <HeaderFileName>MagoNatDE_i.h</HeaderFileName>
-      <DllDataFileName />
+      <DllDataFileName>
+      </DllDataFileName>
       <InterfaceIdentifierFileName>MagoNatDE_i.c</InterfaceIdentifierFileName>
       <ProxyFileName>MagoNatDE_p.c</ProxyFileName>
       <ValidateAllParameters>true</ValidateAllParameters>
     </Midl>
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\Include;$(ProjectDir)..\Include;$(ProjectDir)..\..\EED\Real;$(ProjectDir)..\..\EED\gdtoa;$(ProjectDir)..\..\CVSym\Include;$(ProjectDir)..\..\EED\Include;$(ProjectDir)..\..\udis86;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\Include;$(ProjectDir)..\Include;$(ProjectDir)..\..\EED\Real;$(ProjectDir)..\..\EED\gdtoa;$(ProjectDir)..\..\CVSym\Include;$(ProjectDir)..\..\EED\Include;$(ProjectDir)..\..\udis86;$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>RPC_USE_NATIVE_WCHAR;WIN32;_WINDOWS;NDEBUG;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>Common.h</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
@@ -226,12 +208,14 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Midl>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MkTypLibCompatible>false</MkTypLibCompatible>
       <TargetEnvironment>X64</TargetEnvironment>
       <GenerateStublessProxies>true</GenerateStublessProxies>
       <TypeLibraryName>$(IntDir)MagoNatDE.tlb</TypeLibraryName>
       <HeaderFileName>MagoNatDE_i.h</HeaderFileName>
-      <DllDataFileName />
+      <DllDataFileName>
+      </DllDataFileName>
       <InterfaceIdentifierFileName>MagoNatDE_i.c</InterfaceIdentifierFileName>
       <ProxyFileName>MagoNatDE_p.c</ProxyFileName>
     </Midl>
@@ -264,6 +248,18 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\Include\MagoRemoteCmd.idl.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\Include\MagoRemoteEvent.idl.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="ArchData.cpp" />
     <ClCompile Include="ArchDataX64.cpp" />
     <ClCompile Include="ArchDataX86.cpp" />
@@ -318,35 +314,14 @@
     <ClCompile Include="InstCache.cpp" />
     <ClCompile Include="LocalProcess.cpp" />
     <ClCompile Include="MagoNatDE.cpp" />
-    <ClCompile Include="MagoNatDE_i.c">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-      </PrecompiledHeader>
-      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </PrecompiledHeader>
-      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</CompileAsManaged>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-      </PrecompiledHeader>
-      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</CompileAsManaged>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-      </PrecompiledHeader>
-      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</CompileAsManaged>
-    </ClCompile>
-    <ClCompile Include="MagoRemoteCmd_c.c">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-      </PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-      </PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="MagoRemoteEvent_s.c">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-      </PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-      </PrecompiledHeader>
+    <ClCompile Include="MagoNatDE.idl.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="MemoryBytes.cpp" />
     <ClCompile Include="Module.cpp" />
-    <ClCompile Include="PdataCache.cpp" />
     <ClCompile Include="PendingBreakpoint.cpp" />
     <ClCompile Include="Program.cpp" />
     <ClCompile Include="ProgramNode.cpp" />
@@ -366,53 +341,57 @@
   <ItemGroup>
     <None Include="..\Include\MagoRemoteCmd.acf" />
     <None Include="..\Include\MagoRemoteEvent.acf" />
-    <None Include="Engine.rgs" />
     <None Include="MagoNatDE.def" />
+    <None Include="Engine.rgs" />
     <None Include="MagoNatDE.rgs" />
+    <None Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="..\Include\MagoRemoteCmd.idl">
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">/client stub /server none %(AdditionalOptions)</AdditionalOptions>
-      <GenerateTypeLibrary Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</GenerateTypeLibrary>
       <HeaderFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">MagoRemoteCmd_i.h</HeaderFileName>
-      <ProxyFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-      </ProxyFileName>
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">/client stub /server none %(AdditionalOptions)</AdditionalOptions>
-      <GenerateTypeLibrary Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</GenerateTypeLibrary>
+      <GenerateTypeLibrary Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</GenerateTypeLibrary>
+      <GenerateClientFiles Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Stub</GenerateClientFiles>
+      <GenerateServerFiles Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">None</GenerateServerFiles>
       <HeaderFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MagoRemoteCmd_i.h</HeaderFileName>
-      <ProxyFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-      </ProxyFileName>
+      <GenerateTypeLibrary Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</GenerateTypeLibrary>
+      <GenerateClientFiles Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Stub</GenerateClientFiles>
+      <GenerateServerFiles Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">None</GenerateServerFiles>
+      <OutputDirectory Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)</OutputDirectory>
+      <OutputDirectory Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)</OutputDirectory>
     </Midl>
     <Midl Include="..\Include\MagoRemoteCommon.idl">
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">/client none /server none %(AdditionalOptions)</AdditionalOptions>
-      <GenerateTypeLibrary Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</GenerateTypeLibrary>
       <HeaderFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">MagoRemoteCommon.h</HeaderFileName>
-      <ProxyFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-      </ProxyFileName>
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">/client none /server none %(AdditionalOptions)</AdditionalOptions>
-      <GenerateTypeLibrary Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</GenerateTypeLibrary>
+      <GenerateTypeLibrary Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</GenerateTypeLibrary>
+      <GenerateClientFiles Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">None</GenerateClientFiles>
+      <GenerateServerFiles Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">None</GenerateServerFiles>
       <HeaderFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MagoRemoteCommon.h</HeaderFileName>
-      <ProxyFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-      </ProxyFileName>
+      <GenerateTypeLibrary Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</GenerateTypeLibrary>
+      <GenerateClientFiles Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">None</GenerateClientFiles>
+      <GenerateServerFiles Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">None</GenerateServerFiles>
+      <OutputDirectory Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)</OutputDirectory>
+      <OutputDirectory Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)</OutputDirectory>
     </Midl>
     <Midl Include="..\Include\MagoRemoteEvent.idl">
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">/client none /server stub %(AdditionalOptions)</AdditionalOptions>
-      <GenerateTypeLibrary Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</GenerateTypeLibrary>
       <HeaderFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">MagoRemoteEvent_i.h</HeaderFileName>
-      <ProxyFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-      </ProxyFileName>
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">/client none /server stub %(AdditionalOptions)</AdditionalOptions>
-      <GenerateTypeLibrary Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</GenerateTypeLibrary>
+      <GenerateTypeLibrary Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</GenerateTypeLibrary>
+      <GenerateClientFiles Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">None</GenerateClientFiles>
+      <GenerateServerFiles Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Stub</GenerateServerFiles>
       <HeaderFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MagoRemoteEvent_i.h</HeaderFileName>
-      <ProxyFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-      </ProxyFileName>
+      <GenerateTypeLibrary Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</GenerateTypeLibrary>
+      <GenerateClientFiles Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">None</GenerateClientFiles>
+      <GenerateServerFiles Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Stub</GenerateServerFiles>
+      <OutputDirectory Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)</OutputDirectory>
+      <OutputDirectory Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)</OutputDirectory>
     </Midl>
-    <Midl Include="MagoNatDE.idl" />
+    <Midl Include="MagoNatDE.idl">
+      <OutputDirectory Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)</OutputDirectory>
+      <OutputDirectory Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)</OutputDirectory>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ArchData.h" />
     <ClInclude Include="ArchDataX64.h" />
     <ClInclude Include="ArchDataX86.h" />
+    <ClInclude Include="ArchData.h" />
     <ClInclude Include="BoundBreakpoint.h" />
     <ClInclude Include="BPBinderCallback.h" />
     <ClInclude Include="BPBinders.h" />
@@ -440,7 +419,6 @@
     <ClInclude Include="ErrorBreakpointResolution.h" />
     <ClInclude Include="ErrorProperty.h" />
     <ClInclude Include="EventCallback.h" />
-    <ClInclude Include="EventCallbackBase.h" />
     <ClInclude Include="Events.h" />
     <ClInclude Include="ExceptionTable.h" />
     <ClInclude Include="Expr.h" />
@@ -452,12 +430,8 @@
     <ClInclude Include="InstCache.h" />
     <ClInclude Include="IRemoteEventCallback.h" />
     <ClInclude Include="LocalProcess.h" />
-    <ClInclude Include="MagoNatDE_i.h" />
-    <ClInclude Include="MagoRemoteCmd_i.h" />
-    <ClInclude Include="MagoRemoteEvent_i.h" />
     <ClInclude Include="MemoryBytes.h" />
     <ClInclude Include="Module.h" />
-    <ClInclude Include="PdataCache.h" />
     <ClInclude Include="PendingBreakpoint.h" />
     <ClInclude Include="Program.h" />
     <ClInclude Include="ProgramNode.h" />
@@ -481,12 +455,15 @@
     <ResourceCompile Include="MagoNatDE.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="ReadMe.txt" />
-  </ItemGroup>
-  <ItemGroup>
+    <ProjectReference Include="..\..\CVSym\BinImage\BinImage.vcxproj">
+      <Project>{50220f87-0f20-49b1-b111-a25e1a6c98d9}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\..\CVSym\CVSTI\CVSTI.vcxproj">
       <Project>{18e6fa8b-62c6-42d7-964b-4c34c797075b}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\..\CVSym\CVSym\CVSym.vcxproj">
+      <Project>{d4de19ae-33ef-4b61-bffe-784582bc68c1}</Project>
     </ProjectReference>
     <ProjectReference Include="..\..\EED\gdtoa\gdtoa.vcxproj">
       <Project>{40804c2d-4af3-4e82-a1e8-018ff56b2bba}</Project>

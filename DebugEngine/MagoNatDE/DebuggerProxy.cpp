@@ -25,7 +25,7 @@ namespace Mago
         Shutdown();
     }
 
-    HRESULT DebuggerProxy::Init( EventCallbackBase* callback )
+    HRESULT DebuggerProxy::Init( EventCallback* callback )
     {
         _ASSERT( callback != NULL );
         if ( (callback == NULL) )

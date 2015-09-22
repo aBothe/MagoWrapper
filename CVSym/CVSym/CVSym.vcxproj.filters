@@ -21,9 +21,6 @@
     <ClCompile Include="DebugStore.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="PDBDebugStore.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="SymbolInfo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -34,6 +31,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Util.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PDBDebugStore.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -77,9 +77,6 @@
     <ClInclude Include="OMFHashTable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="PDBDebugStore.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="SymbolInfo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -95,9 +92,11 @@
     <ClInclude Include="Util.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="PDBDebugStore.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="Notes.txt" />
-    <Text Include="ReadMe.txt" />
+    <None Include="ReadMe.txt" />
   </ItemGroup>
 </Project>

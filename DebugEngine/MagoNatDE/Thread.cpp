@@ -16,8 +16,66 @@
 #include "RegisterSet.h"
 #include "ArchData.h"
 #include "ICoreProcess.h"
-#include "PdataCache.h"
 
+
+namespace Mago
+{
+
+class PdataCache
+{
+    typedef AddressRange64 MapKey;
+
+    typedef bool (*RangePred)( const MapKey& left, const MapKey& right );
+    static bool RangeLess( const MapKey& left, const MapKey& right );
+
+    typedef std::vector<BYTE> PdataBuffer;
+    typedef std::map<MapKey, int, RangePred> PdataMap;
+
+    PdataBuffer mBuffer;
+    PdataMap    mMap;
+    int         mEntrySize;
+
+public:
+    PdataCache( int pdataSize );
+    void* Find( Address64 address );
+    void* Add( Address64 begin, Address64 end, void* pdata );
+};
+
+PdataCache::PdataCache( int pdataSize )
+    :   mMap( RangeLess ),
+        mEntrySize( pdataSize )
+{
+}
+
+bool PdataCache::RangeLess( const MapKey& left, const MapKey& right )
+{
+    return left.End < right.Begin;
+}
+
+void* PdataCache::Find( Address64 address )
+{
+    MapKey range = { address, address };
+
+    PdataMap::iterator it = mMap.find( range );
+    if ( it == mMap.end() )
+        return NULL;
+
+    return &mBuffer[it->second];
+}
+
+void* PdataCache::Add( Address64 begin, Address64 end, void* pdata )
+{
+    size_t origSize = mBuffer.size();
+    mBuffer.resize( mBuffer.size() + mEntrySize );
+
+    memcpy( &mBuffer[origSize], pdata, mEntrySize );
+
+    MapKey range = { begin, end };
+    mMap.insert( PdataMap::value_type( range, origSize ) );
+    return &mBuffer[origSize];
+}
+
+}
 
 
 namespace Mago
@@ -88,14 +146,14 @@ namespace Mago
 
         RefPtr<IRegisterSet>    topRegSet;
 
-        HRESULT hr = mDebugger->GetThreadContext( mCoreProcess, mCoreThread, topRegSet.Ref() );
+        HRESULT hr = mDebugger->GetThreadContext( mProg->GetCoreProcess(), mCoreThread, topRegSet.Ref() );
         if ( FAILED( hr ) )
             return hr;
         hr = topRegSet->SetPC( addr );
         if ( FAILED( hr ) )
             return hr;
 
-        hr = mDebugger->SetThreadContext( mCoreProcess, mCoreThread, topRegSet );
+        hr = mDebugger->SetThreadContext( mProg->GetCoreProcess(), mCoreThread, topRegSet );
         return hr;
     }
 
@@ -179,7 +237,7 @@ namespace Mago
         Callstack               callstack;
         RefPtr<IRegisterSet>    topRegSet;
 
-        hr = mDebugger->GetThreadContext( mCoreProcess, mCoreThread, topRegSet.Ref() );
+        hr = mDebugger->GetThreadContext( mProg->GetCoreProcess(), mCoreThread, topRegSet.Ref() );
         if ( FAILED( hr ) )
             return hr;
 
@@ -219,19 +277,11 @@ namespace Mago
     {
         mProg = prog;
         mDebugger = pollThread;
-
-		mCoreProcess = prog->GetCoreProcess();
     }
-
-	void Thread::SetCoreProcess(ICoreProcess* proc, IDebuggerProxy* pollThread)
-	{
-		mCoreProcess = proc;
-		mDebugger = pollThread;
-	}
 
     ICoreProcess*   Thread::GetCoreProcess()
     {
-		return mCoreProcess;
+        return mProg->GetCoreProcess();
     }
 
     IDebuggerProxy* Thread::GetDebuggerProxy()
@@ -328,26 +378,6 @@ namespace Mago
         return hr;
     }
 
-	HRESULT Thread::BuildCallstack(Callstack& callstack)
-	{
-		HRESULT                 hr = S_OK;
-		RefPtr<IRegisterSet>    topRegSet;
-
-		hr = mDebugger->GetThreadContext(mCoreProcess, mCoreThread, topRegSet.Ref());
-		if (FAILED(hr))
-			return hr;
-		
-		mCurPC = (Address64)topRegSet->GetPC();
-		// in case we can't get the return address of top frame, 
-		// make sure our StepOut method knows that we don't know the caller's PC
-		mCallerPC = 0;
-
-		hr = BuildCallstack(topRegSet, callstack);
-		if (FAILED(hr))
-			return hr;
-
-		return hr;
-	}
 
     //------------------------------------------------------------------------
 
@@ -363,7 +393,7 @@ namespace Mago
         WalkContext         walkContext;
         int                 pdataSize = 0;
 
-        archData = mCoreProcess->GetArchData();
+        archData = mProg->GetCoreProcess()->GetArchData();
         pdataSize = archData->GetPDataSize();
 
         PdataCache          pdataCache( pdataSize );
@@ -374,11 +404,11 @@ namespace Mago
 
         if ( walkContext.TempEntry.IsEmpty() )
             return E_OUTOFMEMORY;
-		
+
         hr = AddCallstackFrame( topRegSet, callstack );
         if ( FAILED( hr ) )
             return hr;
-		
+
         hr = archData->BeginWalkStack( 
             topRegSet,
             &walkContext,
@@ -441,13 +471,12 @@ namespace Mago
         HRESULT     hr = S_OK;
         uint32_t    lenRead = 0;
         uint32_t    lenUnreadable = 0;
-        //RefPtr<ICoreProcess>    proc;
+        RefPtr<ICoreProcess>    proc;
 
-        //pThis->mProg->GetCoreProcess( proc.Ref() );
-		ICoreProcess* proc = pThis->GetCoreProcess();
+        pThis->mProg->GetCoreProcess( proc.Ref() );
 
         hr = pThis->mDebugger->ReadMemory( 
-            proc, 
+            proc.Get(), 
             (Address64) lpBaseAddress, 
             nSize, 
             lenRead, 
@@ -531,14 +560,13 @@ namespace Mago
         RefPtr<StackFrame>  stackFrame;
         ArchData*           archData = NULL;
 
-
         mProg->FindModuleContainingAddress( addr, mod );
 
         hr = MakeCComObject( stackFrame );
         if ( FAILED( hr ) )
             return hr;
 
-		archData = mCoreProcess->GetArchData();
+        archData = mProg->GetCoreProcess()->GetArchData();
 
         stackFrame->Init( addr, regSet, this, mod.Get(), archData->GetPointerSize() );
 
