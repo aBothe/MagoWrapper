@@ -8,6 +8,10 @@ A .net wrapper library for mago internals that provide generic D program debug s
 
 Further information
 -----------------------
+Url: http://dsource.org/projects/mago_debugger
+
+The Mago Debugger is now being maintained by Rainer
+at https://github.com/rainers/mago
 
 For a tutorial of how a win32 debugger basically works, visit
 http://ebookbrowse.com/mago-debugger-inner-workings-pptx-d261183552
