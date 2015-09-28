@@ -18,6 +18,11 @@ namespace MagoWrapper{
 	public ref class ExceptionRecord
 	{
 	public:
+		property String^ RootExceptionName
+		{
+			String^ get();
+		}
+
 		property String^ ExceptionName
 		{
 			String^ get();
@@ -44,13 +49,18 @@ namespace MagoWrapper{
 			ExceptionRecord^ get();
 		}
 	internal:
-		ExceptionRecord(Mago::DRuntime* druntime, const EXCEPTION_RECORD64* exceptionRec);
+		ExceptionRecord();
+		void Init(Mago::DRuntime* druntime, const EXCEPTION_RECORD64* exceptionRec);
 
 	private:
-		//IProcess* mProcess;
-		Mago::DRuntime* mDRuntime;
-		const EXCEPTION_RECORD64* mExceptionRecord;
-		ExceptionRecord^ mInnerExceptionRecord;
+		String^ mRootExceptionName;
+		String^ mExceptionName;
+		String^ mExceptionInfo;
+		DWORD mNumberParameters;
+		DWORD mExceptionCode;
+		DWORD mExceptionFlags;
+		PVOID mExceptionAddress;
+		ExceptionRecord^ mInnerException;
 	};
 	
 }

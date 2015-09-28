@@ -7,7 +7,6 @@
 #include "..\..\CVSym\CVSTI\CVSTI.h"
 
 //#include "..\UnitTests\utestExec\Utility.h"
-
 #include "..\MagoNatDE\Utility.h"
 #include "..\MagoNatDE\Thread.h"
 #include "..\MagoNatDE\LocalProcess.h"
@@ -25,18 +24,19 @@ namespace MagoWrapper{
 		mModuleIdCounter = 0;
 
 		mDebugger = NULL;
-		mThreadGuard = new Guard();
 
 		mEventCallback = new DebuggerCallback(this);
 	}
 
 	Debuggee::~Debuggee()
 	{
+		CComModule _Module;
 		if (mDruntime)
 			delete mDruntime;
-		delete mDebugger;
-		delete mEventCallback;
-		delete mThreadGuard;
+		
+		mProg->Dispose();
+		mProg->Release();
+		mDebugger->Release();
 	}
 
 	void Debuggee::Terminate()
@@ -149,8 +149,6 @@ namespace MagoWrapper{
 
 		//call managed event
 		OnThreadStart(thread->GetTid());
-
-		magothread.Detach();
 	}
 
 	void Debuggee::OnInternalThreadExit(DWORD uniquePid, DWORD threadId, DWORD exitCode)
@@ -183,7 +181,6 @@ namespace MagoWrapper{
 			return;
 
 		hr = mod->LoadSymbols(false);
-		mod.Detach();
  	}
 
 	void Debuggee::OnInternalModuleUnload(DWORD uniquePid, Mago::Address64 baseAddr)
@@ -212,8 +209,9 @@ namespace MagoWrapper{
 	{
 		SetStoppedThreadId(threadId);
 
-		ExceptionRecord^ rec = gcnew ExceptionRecord(mDruntime, exceptRec);
-
+		ExceptionRecord^ rec = gcnew ExceptionRecord();
+		rec->Init(mDruntime, exceptRec);
+		
 		return (RunMode)OnException(threadId, firstChance, rec);
 	}
 
@@ -285,7 +283,7 @@ namespace MagoWrapper{
 		if (FAILED(hr))
 			return frames;
 
-		IEnumDebugFrameInfo2* edfi = NULL;
+		CComPtr<IEnumDebugFrameInfo2> edfi = NULL;
 		hr = thread->EnumFrameInfo(flags, 10, &edfi);
 		if (FAILED(hr))
 			return frames;
@@ -309,7 +307,7 @@ namespace MagoWrapper{
 		for (ULONG i = 0; i < fetched; i++)
 		{
 			FRAMEINFO* fi = &array[i];
-			IDebugCodeContext2* dcCtx = NULL;
+			CComPtr<IDebugCodeContext2> dcCtx = NULL;
 			
 			hr = fi->m_pFrame->GetCodeContext(&dcCtx);
 			if (FAILED(hr))
@@ -330,7 +328,6 @@ namespace MagoWrapper{
 			frames->Add(frame);
 		}
 
-		array.Detach();
 		return frames;
 	}
 
@@ -338,7 +335,7 @@ namespace MagoWrapper{
 	{
 		List<DebuggeeThread^>^ result = gcnew List<DebuggeeThread^>();
 
-		IEnumDebugThreads2* edthread = NULL;
+		CComPtr<IEnumDebugThreads2> edthread = NULL;
 		HRESULT hr = mProg->EnumThreads(&edthread);
 		if (FAILED(hr))
 			return result;
@@ -349,16 +346,13 @@ namespace MagoWrapper{
 			return result;
 
 		ULONG fetched = 0;
-		IDebugThread2** idbThreadArray = new IDebugThread2*[cnt];
+		InterfaceArray<IDebugThread2> idbThreadArray(cnt);
 		while (fetched < cnt) 
 		{
 			ULONG ft = 0;
 			hr = edthread->Next(cnt - fetched, &(idbThreadArray[fetched]), &ft);
 			if (FAILED(hr))
-			{
-				delete[] idbThreadArray;
 				return result;
-			}
 			fetched += ft;
 		}
 
@@ -374,24 +368,19 @@ namespace MagoWrapper{
 			result->Add(dthread);
 		}
 
-		delete[] idbThreadArray;
 		return result;
-	}
-
-	void Debuggee::SetProcess(Mago::ICoreProcess* process)
-	{
-		mProcess = process;
-
-		if (mDruntime)
-			delete mDruntime;
-
-		//need to get proper pointer size
-		mDruntime = new Mago::DRuntime(mDebugger, process);
 	}
 
 	void Debuggee::SetProgram(Mago::Program* prog)
 	{
 		mProg = prog;
+		mProg->AddRef();
+		mProcess = prog->GetCoreProcess();
+		if (mDruntime)
+			delete mDruntime;
+
+		//need to get proper pointer size
+		mDruntime = new Mago::DRuntime(mDebugger, mProcess);
 	}
 
 	Mago::Program* Debuggee::GetProgram()

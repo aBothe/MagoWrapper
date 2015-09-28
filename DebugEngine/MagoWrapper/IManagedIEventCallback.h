@@ -15,24 +15,6 @@ namespace MagoWrapper{
 	interface class IManagedIEventCallback
 	{
 	public:
-
-		//virtual void OnInternalProcessStart(IProcess* process) = 0;
-		//virtual void OnInternalProcessExit(IProcess* process, DWORD exitCode) = 0;
-		//virtual void OnInternalThreadStart(IProcess* process, Thread* thread) = 0;
-		//virtual void OnInternalThreadExit(IProcess* process, DWORD threadId, DWORD exitCode) = 0;
-		//virtual void OnInternalModuleLoad(IProcess* process, IModule* module) = 0;
-		//virtual void OnInternalModuleUnload(IProcess* process, Address baseAddr) = 0;
-		//virtual void OnInternalOutputString(IProcess* process, const wchar_t* outputString) = 0;
-		//virtual void OnInternalLoadComplete(IProcess* process, DWORD threadId) = 0;
-
-		//// Returns true to continue onto run mode, false to stay in break mode.
-		//virtual RunMode OnInternalException(IProcess* process, DWORD threadId, bool firstChance, const EXCEPTION_RECORD* exceptRec) = 0;
-		//virtual bool OnInternalBreakpoint(IProcess* process, uint32_t threadId, Address address, Enumerator<Mago::BPCookie>* iter) = 0;
-		//virtual void OnInternalStepComplete(IProcess* process, uint32_t threadId) = 0;
-		//virtual void OnInternalAsyncBreakComplete(IProcess* process, uint32_t threadId) = 0;
-		//virtual void OnInternalError(IProcess* process, HRESULT hrErr, uint32_t event) = 0;
-		//virtual ProbeRunMode OnInternalCallProbe(IProcess* process, uint32_t threadId, Address address, AddressRange& thunkRange);
-
 		virtual void OnInternalProcessStart(DWORD uniquePid);
 		virtual void OnInternalProcessExit(DWORD uniquePid, DWORD exitCode);
 		virtual void OnInternalThreadStart(DWORD uniquePid, Mago::ICoreThread* thread);

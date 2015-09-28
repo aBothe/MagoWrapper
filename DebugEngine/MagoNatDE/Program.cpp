@@ -398,7 +398,8 @@ namespace Mago
 
         mProgThread.Release();
         mProgMod.Release();
-        mEngine.Release();
+		if (mEngine)
+			mEngine.Release();
     }
 
     void        Program::SetEngine( Engine* engine )

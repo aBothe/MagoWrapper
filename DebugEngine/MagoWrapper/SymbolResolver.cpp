@@ -10,6 +10,7 @@
 #include "..\MagoNatDE\RegisterSet.h"
 #include "..\MagoNatDE\Config.h"
 #include "..\MagoNatDE\EnumFrameInfo.h"
+#include "..\MagoNatDE\EnumPropertyInfo.h"
 #include "..\MagoNatDE\Program.h"
 #include "..\MagoNatDE\CodeContext.h"
 
@@ -46,24 +47,11 @@ namespace MagoWrapper
 	{
 		mPtrSize = ptrSize;
 		mDebuggee = debuggee;
-		mTypeEnv = NULL;
-
-		RefPtr<MagoEE::ITypeEnv> typeEnv;
-		HRESULT hr = MagoEE::EED::MakeTypeEnv(mPtrSize, typeEnv.Ref());
-
-		mTypeEnv = typeEnv.Detach();
-
-		mModGuard = new Guard();
-		mExprContextGuard = new Guard();
-
 	}
 
 	SymbolResolver::~SymbolResolver()
 
 	{
-		delete mExprContextGuard;
-		delete mModGuard;
-		delete mTypeEnv;
 	}
 
 	ULONG64 SymbolResolver::GetAddressFromCodeLine(String^ str, uint16_t line)
@@ -131,7 +119,7 @@ namespace MagoWrapper
 		CComModule _Module;
 		List<DebugScopedSymbol^>^ list = gcnew List<DebugScopedSymbol^>();
 
-		IDebugProperty2* dp = NULL;
+		CComPtr<IDebugProperty2> dp = NULL;
 		HRESULT hr = EvaluateExpression(expression, threadId, &dp);
 		if (FAILED(hr))
 			return list;
@@ -154,7 +142,7 @@ namespace MagoWrapper
 			return list;
 		
 		CComModule _Module2;
-		IEnumDebugPropertyInfo2* edpi = NULL;	
+		CComPtr<IEnumDebugPropertyInfo2> edpi = NULL;	
 		hr = dp->EnumChildren(diflags, 10, guidFilterAllLocals, DBG_ATTRIB_ALL, NULL, 1000, &edpi);
 		if (FAILED(hr))
 			return list;
@@ -163,17 +151,14 @@ namespace MagoWrapper
 		hr = edpi->GetCount(&cnt);
 		if (FAILED(hr))
 			return list;
-
-		DEBUG_PROPERTY_INFO* dpiArray = new DEBUG_PROPERTY_INFO[cnt];
+		
+		Mago::PropertyInfoArray dpiArray(cnt);
 		ULONG fetched = 0;
 		while (fetched < cnt) {
 			ULONG ft;
 			hr = edpi->Next(cnt - fetched, &dpiArray[fetched], &ft);
 			if (FAILED(hr))
-			{
-				delete [] dpiArray;
 				return list;
-			}
 			fetched += ft;
 		}
 
@@ -197,7 +182,6 @@ namespace MagoWrapper
 			list->Add(scopedSymbol);
 		}
 
-		delete [] dpiArray;
 		return list;
 	}
 
@@ -224,7 +208,7 @@ namespace MagoWrapper
 			| FIF_FUNCNAME_ARGS_VALUES
 			| FIF_FRAME;
 
-		IEnumDebugFrameInfo2* edfi = NULL;
+		CComPtr<IEnumDebugFrameInfo2> edfi = NULL;
 		HRESULT hr = thread->EnumFrameInfo(flags, 10, &edfi);
 		if (FAILED(hr))
 			return hr;
@@ -250,7 +234,7 @@ namespace MagoWrapper
 
 		//use first item
 		FRAMEINFO* fi = &array[0];
-		IDebugExpressionContext2* dectx = NULL;
+		CComPtr<IDebugExpressionContext2> dectx = NULL;
 		hr = fi->m_pFrame->GetExpressionContext(&dectx);
 		if (FAILED(hr))
 			return hr;
@@ -262,7 +246,7 @@ namespace MagoWrapper
 			| PARSE_FUNCTION_AS_ADDRESS
 			| PARSE_DESIGN_TIME_EXPR_EVAL;
 
-		IDebugExpression2* de = NULL;
+		CComPtr<IDebugExpression2> de = NULL;
 		BSTR sErr;
 		UINT pichErr;
 		hr = dectx->ParseText(strExpression, pFlags, 10, &de, &sErr, &pichErr);
@@ -279,7 +263,8 @@ namespace MagoWrapper
 			| EVAL_NOEVENTS
 			| EVAL_DESIGN_TIME_EXPR_EVAL
 			| EVAL_ALLOW_IMPLICIT_VARS;
-		IDebugProperty2* _dp = NULL;
+
+		CComPtr<IDebugProperty2> _dp = NULL;
 		hr = de->EvaluateSync(evFlags, 1000, NULL, &_dp);
 		if (FAILED(hr))
 			return hr;
@@ -290,7 +275,7 @@ namespace MagoWrapper
 
 	DebugScopedSymbol^ SymbolResolver::Evaluate(String^ expression, DWORD threadId)
 	{
-		IDebugProperty2* dp = NULL;
+		CComPtr<IDebugProperty2> dp = NULL;
 		HRESULT hr = EvaluateExpression(expression, threadId, &dp);
 		if (FAILED(hr))
 			return nullptr;
@@ -350,7 +335,7 @@ namespace MagoWrapper
 			| FIF_FUNCNAME_ARGS_VALUES
 			| FIF_FRAME;
 
-		IEnumDebugFrameInfo2* edfi = NULL;
+		CComPtr<IEnumDebugFrameInfo2> edfi = NULL;
 		hr = thread->EnumFrameInfo(flags, 10, &edfi);
 		if (FAILED(hr))
 			return hr;
@@ -375,7 +360,7 @@ namespace MagoWrapper
 		for (ULONG i; i < fetched; i++)
 		{
 			FRAMEINFO* fi = &array[i];
-			IDebugCodeContext2* dcCtx = NULL;
+			CComPtr<IDebugCodeContext2> dcCtx = NULL;
 			hr = fi->m_pFrame->GetCodeContext(&dcCtx);
 			if (FAILED(hr))
 				continue;
@@ -404,7 +389,7 @@ namespace MagoWrapper
 			| DEBUGPROP_INFO_PROP
 			| DEBUGPROP_INFO_ATTRIB;
 
-		IEnumDebugPropertyInfo2* pi = NULL;	
+		CComPtr<IEnumDebugPropertyInfo2> pi = NULL;	
 		fetched = 0;
 		hr = sfrm->m_pFrame->EnumProperties(diflags, 10, guidFilterAllLocalsPlusArgs, 2000, &fetched, &pi);
 		
@@ -413,16 +398,13 @@ namespace MagoWrapper
 
 		cnt = fetched;
 		fetched = 0;
-		DEBUG_PROPERTY_INFO* dpiArray = new DEBUG_PROPERTY_INFO[cnt];
+		Mago::PropertyInfoArray dpiArray(cnt);
 		while (fetched < cnt)
 		{
 			ULONG ft = 0;
 			pi->Next(cnt - fetched, &dpiArray[fetched], &ft);
 			if (FAILED(hr))
-			{
-				delete[] dpiArray;
 				return hr;
-			}
 
 			fetched += ft;
 		}
@@ -447,8 +429,6 @@ namespace MagoWrapper
 			list->Add(scopedSymbol); 
 		}
 
-		delete[] dpiArray;
-
 		return S_OK;		
 	}
 
@@ -463,7 +443,7 @@ namespace MagoWrapper
 
 		CComModule _Module;
 		Mago::Program* prog = mDebuggee->GetProgram();
-		IEnumDebugModules2* edm = NULL;
+		CComPtr<IEnumDebugModules2> edm = NULL;
 		HRESULT hr = prog->EnumModules(&edm);
 		if (FAILED(hr))
 			return false;
@@ -473,16 +453,14 @@ namespace MagoWrapper
 		if (FAILED(hr))
 			return false;
 
-		IDebugModule2** dmArray = new IDebugModule2*[cnt];
+		InterfaceArray<IDebugModule2>   dmArray(cnt);
 		ULONG fetched = 0;
 		while (fetched < cnt)
 		{
 			ULONG ft = 0;
 			hr = edm->Next(cnt - fetched, &dmArray[fetched], &ft);
-			if (FAILED(hr)) {
-				delete [] dmArray;
+			if (FAILED(hr))
 				return false;
-			}
 			fetched += ft;
 		}
 		
@@ -507,8 +485,6 @@ namespace MagoWrapper
 			}
 		}
 
-		delete [] dmArray;
-
 		return bindings.size() > 0;
     }
 
@@ -520,7 +496,7 @@ namespace MagoWrapper
     {
 		CComModule _Module;
 		Mago::Program* prog = mDebuggee->GetProgram();
-		IEnumDebugModules2* edm = NULL;
+		CComPtr<IEnumDebugModules2> edm = NULL;
 		HRESULT hr = prog->EnumModules(&edm);
 		if (FAILED(hr))
 			return false;
@@ -530,16 +506,14 @@ namespace MagoWrapper
 		if (FAILED(hr))
 			return false;
 
-		IDebugModule2** dmArray = new IDebugModule2*[cnt];
+		InterfaceArray<IDebugModule2> dmArray(cnt);
 		ULONG fetched = 0;
 		while (fetched < cnt)
 		{
 			ULONG ft = 0;
 			hr = edm->Next(cnt - fetched, &dmArray[fetched], &ft);
-			if (FAILED(hr)) {
-				delete [] dmArray;
+			if (FAILED(hr))
 				return false;
-			}
 			fetched += ft;
 		}
 
@@ -586,7 +560,6 @@ namespace MagoWrapper
 			break;
 		}
 
-		delete [] dmArray;
 		return found;
     }
 

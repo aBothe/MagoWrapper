@@ -100,8 +100,6 @@ namespace MagoWrapper
 		//EventCallbackBase* mEventCallback;
 		DebuggerCallback* mEventCallback;
 
-		//void SetProcess(IProcess* process);
-		void SetProcess(Mago::ICoreProcess* process);
 		//IProcess* GetProcess();
 		Mago::ICoreProcess* GetProcess();
 		void SetProgram(Mago::Program* prog);
@@ -110,27 +108,8 @@ namespace MagoWrapper
 		Mago::DebuggerProxy* GetDebuggerProxy();
 
 		void SetStoppedThreadId(DWORD stoppedThreadId);
-		//bool GetStoppedThread(Thread*& thread);
-		//ModuleMap* GetModuleMap();
 
 		bool GetThread(DWORD threadId, RefPtr<Mago::Thread>& thread);
-
-		//virtual void OnInternalProcessStart(IProcess* process) = IManagedIEventCallback::OnInternalProcessStart;
-		//virtual void OnInternalProcessExit(IProcess* process, DWORD exitCode) = IManagedIEventCallback::OnInternalProcessExit;
-		//virtual void OnInternalThreadStart(IProcess* process, Thread* thread) = IManagedIEventCallback::OnInternalThreadStart;
-		//virtual void OnInternalThreadExit(IProcess* process, DWORD threadId, DWORD exitCode) = IManagedIEventCallback::OnInternalThreadExit;
-		//virtual void OnInternalModuleLoad(IProcess* process, IModule* module) = IManagedIEventCallback::OnInternalModuleLoad;
-		//virtual void OnInternalModuleUnload(IProcess* process, Address baseAddr) = IManagedIEventCallback::OnInternalModuleUnload;
-		//virtual void OnInternalOutputString(IProcess* process, const wchar_t* outputString) = IManagedIEventCallback::OnInternalOutputString;
-		//virtual void OnInternalLoadComplete(IProcess* process, DWORD threadId) = IManagedIEventCallback::OnInternalLoadComplete;
-
-		//virtual RunMode OnInternalException(IProcess* process, DWORD threadId, bool firstChance, const EXCEPTION_RECORD* exceptRec) = IManagedIEventCallback::OnInternalException;
-		//virtual bool OnInternalBreakpoint(IProcess* process, uint32_t threadId, Address address, Enumerator<Mago::BPCookie>* iter) = IManagedIEventCallback::OnInternalBreakpoint;
-		//virtual void OnInternalStepComplete(IProcess* process, uint32_t threadId) = IManagedIEventCallback::OnInternalStepComplete;
-		//virtual void OnInternalAsyncBreakComplete(IProcess* process, uint32_t threadId) = IManagedIEventCallback::OnInternalAsyncBreakComplete;
-		//virtual void OnInternalError(IProcess* process, HRESULT hrErr, uint32_t event) = IManagedIEventCallback::OnInternalError;
-
-		//virtual ProbeRunMode OnInternalCallProbe(IProcess* process, uint32_t threadId, Address address, AddressRange& thunkRange) = IManagedIEventCallback::OnInternalCallProbe;
 
 		virtual void OnInternalProcessStart(DWORD uniquePid) = IManagedIEventCallback::OnInternalProcessStart;
 		virtual void OnInternalProcessExit(DWORD uniquePid, DWORD exitCode) = IManagedIEventCallback::OnInternalProcessExit;
@@ -154,10 +133,7 @@ namespace MagoWrapper
 		DWORD mStoppedThreadId;
 
 		Mago::DebuggerProxy* mDebugger;
-		//ModuleMap* mModules;		
 		DWORD mModuleIdCounter;
-		//ThreadMap* mThreads;
-		Guard* mThreadGuard;
 
 
 

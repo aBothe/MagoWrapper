@@ -3,59 +3,84 @@
 
 namespace MagoWrapper
 {
-	ExceptionRecord::ExceptionRecord(Mago::DRuntime* druntime, const EXCEPTION_RECORD64* exceptionRec)
+	ExceptionRecord::ExceptionRecord()
+	{}
+	
+	void ExceptionRecord::Init(Mago::DRuntime* druntime, const EXCEPTION_RECORD64* exceptionRec)
 	{
-		mDRuntime = druntime;
-		//mProcess = process;
-		mExceptionRecord = exceptionRec;
-		mInnerExceptionRecord = nullptr;
+		mInnerException = nullptr;
 
-		if (mExceptionRecord->ExceptionRecord)
-			mInnerExceptionRecord = gcnew ExceptionRecord(druntime, (const EXCEPTION_RECORD64*)mExceptionRecord->ExceptionRecord);
+		CComBSTR exceptionName;
+		CComBSTR exceptionInfo = NULL;
+		wchar_t name[100] = L"";
+		static const DWORD  DExceptionCode = 0xE0440001;
+		if (exceptionRec->ExceptionCode == DExceptionCode)
+		{
+			mRootExceptionName = "D Exceptions";
+			druntime->GetClassName(exceptionRec->ExceptionInformation[0], &exceptionName);
+			druntime->GetExceptionInfo(exceptionRec->ExceptionInformation[0], &exceptionInfo);
+
+			if (exceptionName == NULL)
+				exceptionName = L"D Exception";
+		}
+		else
+		{
+			mRootExceptionName = "Win32 Exceptions";
+			// make it a Win32 exception
+			swprintf_s(name, L"%08x", exceptionRec->ExceptionCode);
+			exceptionName = name;
+		}
+		mExceptionName = gcnew String(exceptionName.m_str);
+		mExceptionInfo = gcnew String(exceptionInfo.m_str);
+		mNumberParameters = exceptionRec->NumberParameters;
+		mExceptionCode = exceptionRec->ExceptionCode;
+		mExceptionFlags = exceptionRec->ExceptionFlags;
+		mExceptionAddress = (PVOID)exceptionRec->ExceptionAddress;
+
+		if (exceptionRec->ExceptionRecord)
+		{
+			mInnerException = gcnew ExceptionRecord();
+			mInnerException->Init(druntime, (const EXCEPTION_RECORD64*)exceptionRec->ExceptionRecord);
+		}
+		else
+		{
+			mInnerException = nullptr;
+		}
+
+	}
+
+	String^ ExceptionRecord::RootExceptionName::get()
+	{
+		return mRootExceptionName;
 	}
 
 	String^ ExceptionRecord::ExceptionName::get()
 	{
-		CComBSTR exceptionName = NULL;		
-		HRESULT hr = mDRuntime->GetClassName(mExceptionRecord->ExceptionInformation[0], &exceptionName);
-		if ( FAILED(hr) )
-			exceptionName = "";
-
-		if (exceptionName == NULL)
-			exceptionName = L"D Exception";
-
-		return gcnew String(exceptionName.m_str);
-
+		return mExceptionName;
 	}
 
 	String^ ExceptionRecord::ExceptionInfo::get()
 	{
-		CComBSTR exceptionInfo = NULL;
-		
-		HRESULT hr = mDRuntime->GetExceptionInfo(mExceptionRecord->ExceptionInformation[0], &exceptionInfo);
-		if ( FAILED(hr) )
-			exceptionInfo = "";
-
-		return gcnew String(exceptionInfo.m_str);
+		return mExceptionInfo;
 	}
 
 	DWORD ExceptionRecord::ExceptionCode::get()
 	{
-		return mExceptionRecord->ExceptionCode;
+		return mExceptionCode;
 	}
 
 	DWORD ExceptionRecord::ExceptionFlags::get()
 	{
-		return mExceptionRecord->ExceptionFlags;
+		return mExceptionFlags;;
 	}
 
 	PVOID ExceptionRecord::ExceptionAddress::get()
 	{
-		return (PVOID)mExceptionRecord->ExceptionAddress;
+		return mExceptionAddress;
 	}
 
 	ExceptionRecord^ ExceptionRecord::InnerExceptionRecord::get()
 	{
-		return mInnerExceptionRecord;
+		return mInnerException;
 	}
 }

@@ -7,6 +7,7 @@ namespace MagoWrapper
 {
 	DebuggerCallback::DebuggerCallback(IManagedIEventCallback^ managedCallback)
 	{
+		mRefCount = 0;
 		mManagedCallback = managedCallback;
 		//SetCanStepInFunctionReturnValue(true);
 	}

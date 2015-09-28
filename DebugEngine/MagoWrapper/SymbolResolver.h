@@ -71,10 +71,6 @@ namespace MagoWrapper
 		DebugScopedSymbol^ Evaluate(String^ expression, DWORD threadId);
 
 	internal:
-        Guard* mModGuard;
-        MagoEE::ITypeEnv* mTypeEnv;
-
-		Guard* mExprContextGuard;
 
 	private:
 

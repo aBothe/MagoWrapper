@@ -70,16 +70,10 @@ namespace MagoWrapper{
 		if (FAILED(hr)) 
 			throw gcnew System::Exception("Error launching Executable" + hr.ToString());
 
-		debuggee->SetProcess(proc);
-
-		//prog->SetEngine(this);
-		//prog->SetProcess(*ppDebugProcess);
 		prog->SetCoreProcess(proc);
 		prog->SetDebuggerProxy(debuggee->GetDebuggerProxy());
 		debuggee->SetProgram(prog);
 
-		proc.Detach();  //check for mem leak
-		prog.Detach();  //check for mem leak
 	}
 
 }
